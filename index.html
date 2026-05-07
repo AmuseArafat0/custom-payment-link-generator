@@ -430,6 +430,22 @@ tr:hover td{background:rgba(155,158,200,0.03);}
           </table>
         </div>
       </div>
+
+      <!-- Skipped rows detail -->
+      <div id="skippedWrap" style="display:none;margin-top:22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <p style="font-size:10px;color:#c87a7a;font-family:var(--mono);letter-spacing:1px">✖ SKIPPED ROWS — no valid phone number detected</p>
+          <button onclick="document.getElementById('skippedWrap').style.display='none'" style="background:none;border:none;color:var(--mist);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:1px">✕ close</button>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Name</th><th>Raw Phone Value</th><th>Email</th><th>Reason</th></tr>
+            </thead>
+            <tbody id="skippedTbody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
     </div>
 
@@ -983,12 +999,12 @@ function buildOutput(){
   const altLink=document.getElementById('altLink').value.trim();
   const overrideCC=ccMode==='manual'?getManualCC():null;
   let noPhone=0,total=0;
-  const seen=new Set(),dups=[];
+  const seen=new Set(),dups=[],skipped=[];
   outRows=[];
   for(const r of rows){
     total++;
     const p=parsePhone(r.phoneRaw,overrideCC);
-    if(!p){noPhone++;continue;}
+    if(!p){noPhone++;skipped.push({name:r.fullName,phone:r.phoneRaw,email:r.email});continue;}
     const key=p.cc+p.local;
     if(seen.has(key)){dups.push(`${r.fullName} (+${p.cc}${p.local})`);continue;}
     seen.add(key);
@@ -1005,7 +1021,7 @@ function buildOutput(){
       _name:       r.fullName,
     });
   }
-  return{total,kept:outRows.length,dups,noPhone};
+  return{total,kept:outRows.length,dups,noPhone,skipped};
 }
 
 function buildLink(base,email,phone,cc,name){
@@ -1031,7 +1047,18 @@ function run(){
       const p=s.dups.slice(0,5).join(', ');
       w.push(`⚠ ${s.dups.length} duplicate phone(s) dissolved: ${p}${s.dups.length>5?` …+${s.dups.length-5} more`:''}`);
     }
-    if(s.noPhone)w.push(`⚠ ${s.noPhone} row(s) banished — no valid phone number.`);
+    if(s.noPhone){
+      w.push(`⚠ ${s.noPhone} row(s) banished — no valid phone number. <a href="#" onclick="document.getElementById('skippedWrap').style.display='block';return false;" style="color:var(--lilac);text-decoration:underline;font-family:var(--mono)">View details ↓</a>`);
+      const sb=document.getElementById('skippedTbody');
+      sb.innerHTML='';
+      s.skipped.forEach((r,i)=>{
+        const tr=document.createElement('tr');
+        const rawDisplay=r.phone||'<em style="color:var(--mist)">empty</em>';
+        const reason=!r.phone?'Empty / missing':'Too short or unrecognisable format';
+        tr.innerHTML=`<td class="t-muted">${i+1}</td><td style="color:var(--silver)">${r.name||'—'}</td><td style="color:#c87a7a;font-family:var(--mono)">${rawDisplay}</td><td style="color:var(--mist);font-family:var(--mono);font-size:9px">${r.email||'—'}</td><td style="color:var(--gold);font-family:var(--mono);font-size:9px">${reason}</td>`;
+        sb.appendChild(tr);
+      });
+    }
     if(w.length)warnMsg(w.join('\n'));
     const tbody=document.getElementById('tbody');
     tbody.innerHTML='';
@@ -1090,7 +1117,7 @@ function err(msg){
 }
 function warnMsg(msg){
   const el=document.getElementById('warnBox');
-  el.textContent=msg;el.style.display='block';
+  el.innerHTML=msg;el.style.display="block";
 }
 function clearMsg(){
   document.getElementById('errBox').style.display='none';
