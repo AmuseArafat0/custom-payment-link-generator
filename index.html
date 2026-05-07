@@ -446,6 +446,22 @@ tr:hover td{background:rgba(155,158,200,0.03);}
           </table>
         </div>
       </div>
+
+      <!-- Duplicate rows detail -->
+      <div id="dupsWrap" style="display:none;margin-top:22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <p style="font-size:10px;color:var(--gold);font-family:var(--mono);letter-spacing:1px">◈ DISSOLVED DUPLICATES — kept first occurrence, removed these</p>
+          <button onclick="document.getElementById('dupsWrap').style.display='none'" style="background:none;border:none;color:var(--mist);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:1px">✕ close</button>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th></tr>
+            </thead>
+            <tbody id="dupsTbody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
     </div>
 
@@ -1006,7 +1022,7 @@ function buildOutput(){
     const p=parsePhone(r.phoneRaw,overrideCC);
     if(!p){noPhone++;skipped.push({name:r.fullName,phone:r.phoneRaw,email:r.email});continue;}
     const key=p.cc+p.local;
-    if(seen.has(key)){dups.push(`${r.fullName} (+${p.cc}${p.local})`);continue;}
+    if(seen.has(key)){dups.push({name:r.fullName,phone:`+${p.cc}${p.local}`,email:r.email});continue;}
     seen.add(key);
     const ccNum=Number(p.cc);
     outRows.push({
@@ -1044,8 +1060,15 @@ function run(){
     sg.querySelectorAll('.stat-card').forEach(c=>{c.style.animation='none';void c.offsetWidth;c.style.animation='';});
     const w=[];
     if(s.dups.length){
-      const p=s.dups.slice(0,5).join(', ');
-      w.push(`⚠ ${s.dups.length} duplicate phone(s) dissolved: ${p}${s.dups.length>5?` …+${s.dups.length-5} more`:''}`);
+      const preview=s.dups.slice(0,5).map(d=>d.name+' ('+d.phone+')').join(', ');
+      w.push(`⚠ ${s.dups.length} duplicate phone(s) dissolved: ${preview}${s.dups.length>5?` …+${s.dups.length-5} more`:''} <a href="#" onclick="document.getElementById('dupsWrap').style.display='block';return false;" style="color:var(--lilac);text-decoration:underline;font-family:var(--mono)">View details ↓</a>`);
+      const db=document.getElementById('dupsTbody');
+      db.innerHTML='';
+      s.dups.forEach((d,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td class="t-muted">${i+1}</td><td style="color:var(--silver)">${d.name||'—'}</td><td style="color:var(--gold);font-family:var(--mono)">${d.phone}</td><td style="color:var(--mist);font-family:var(--mono);font-size:9px">${d.email||'—'}</td>`;
+        db.appendChild(tr);
+      });
     }
     if(s.noPhone){
       w.push(`⚠ ${s.noPhone} row(s) banished — no valid phone number. <a href="#" onclick="document.getElementById('skippedWrap').style.display='block';return false;" style="color:var(--lilac);text-decoration:underline;font-family:var(--mono)">View details ↓</a>`);
