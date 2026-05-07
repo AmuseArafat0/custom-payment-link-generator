@@ -3,297 +3,577 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Payment Link Generator</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<title>✦ Payment Link Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=IM+Fell+English:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: #2a2a3a;
-    --accent: #6c63ff;
-    --accent2: #ff6584;
-    --green: #00e5a0;
-    --yellow: #ffd166;
-    --text: #e8e8f0;
-    --muted: #6b6b8a;
-    --mono: 'Space Mono', monospace;
-    --sans: 'Syne', sans-serif;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background-image: linear-gradient(rgba(108,99,255,0.04) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(108,99,255,0.04) 1px, transparent 1px);
-    background-size: 40px 40px; pointer-events: none; z-index: 0;
-  }
-  .app { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; padding: 48px 24px 80px; }
+:root {
+  --bg:       #0c0d10;
+  --surface:  #111318;
+  --surface2: #161921;
+  --border:   #252a35;
+  --silver:   #c8ccd8;
+  --sage:     #7ea89a;
+  --frost:    #a8bfd4;
+  --lilac:    #9b9ec8;
+  --gold:     #c9b97a;
+  --mist:     #6e7585;
+  --rune:     #d4c9f0;
+  --text:     #dde0ea;
+  --serif:    'Cormorant Garamond', serif;
+  --fell:     'IM Fell English', serif;
+  --mono:     'Space Mono', monospace;
+}
 
-  .header { margin-bottom: 48px; text-align: center; }
-  .header-badge {
-    display: inline-block; background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.35);
-    color: var(--accent); font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
-    padding: 5px 14px; border-radius: 20px; margin-bottom: 20px; text-transform: uppercase;
-  }
-  h1 {
-    font-size: 44px; font-weight: 800; line-height: 1.05;
-    background: linear-gradient(135deg, #ffffff 0%, #a89cff 60%, var(--accent) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px;
-  }
-  .subtitle { color: var(--muted); font-size: 13px; font-family: var(--mono); line-height: 1.8; }
-  .subtitle strong { color: var(--green); }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  .steps { display: flex; flex-direction: column; gap: 16px; }
-  .step {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
-    padding: 30px; transition: border-color 0.25s;
-  }
-  .step:hover { border-color: rgba(108,99,255,0.3); }
-  .step-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
-  .step-badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; background: rgba(108,99,255,0.18);
-    border: 1px solid rgba(108,99,255,0.5); border-radius: 50%;
-    font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0;
-  }
-  .step-title { font-size: 15px; font-weight: 700; color: var(--text); }
-  .step-desc  { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--serif);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  .upload-zone {
-    border: 2px dashed rgba(108,99,255,0.25); border-radius: 14px; padding: 36px 24px;
-    text-align: center; cursor: pointer; transition: all 0.2s; position: relative;
-    background: rgba(108,99,255,0.03);
-  }
-  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: rgba(108,99,255,0.07); }
-  .upload-zone input[type="file"] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer;
-    width: 100%; height: 100%; border: none; padding: 0;
-  }
-  .upload-icon { font-size: 38px; margin-bottom: 12px; }
-  .upload-main { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
-  .upload-sub  { font-size: 12px; color: var(--muted); font-family: var(--mono); }
-  .upload-ok   {
-    display: none; margin-top: 14px;
-    background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3);
-    border-radius: 8px; padding: 10px 16px;
-    color: var(--green); font-family: var(--mono); font-size: 13px; font-weight: 700;
-  }
+/* ── Canvas layer ── */
+#canvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
 
-  label {
-    display: block; font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-family: var(--mono);
-  }
-  .input-wrap { position: relative; }
-  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
-  input[type="url"] {
-    width: 100%; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 11px; padding: 13px 14px 13px 40px; color: var(--text);
-    font-family: var(--mono); font-size: 13px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  input[type="url"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,0.1); }
-  input::placeholder { color: #3a3a52; }
-  .link-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 600px) { .link-pair { grid-template-columns: 1fr; } }
-  .field-group { margin-bottom: 0; }
+/* ── Ambient mist orbs ── */
+.orb {
+  position:fixed; border-radius:50%; filter:blur(120px);
+  pointer-events:none; z-index:0; animation:mist-drift ease-in-out infinite;
+}
+.orb1 { width:600px; height:600px; background:rgba(155,158,200,0.04); top:-200px; left:-200px; animation-duration:30s; }
+.orb2 { width:500px; height:500px; background:rgba(126,168,154,0.03); bottom:-100px; right:-150px; animation-duration:38s; animation-delay:-12s; }
+.orb3 { width:400px; height:400px; background:rgba(168,191,212,0.03); top:35%; left:55%; animation-duration:44s; animation-delay:-22s; }
+@keyframes mist-drift {
+  0%,100% { transform:translate(0,0) scale(1); }
+  33%      { transform:translate(25px,-35px) scale(1.04); }
+  66%      { transform:translate(-18px,22px) scale(0.97); }
+}
 
-  /* Auto-pills */
-  .auto-pills { display: flex; flex-wrap: wrap; gap: 10px; }
-  .pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 7px 12px; font-family: var(--mono); font-size: 12px;
-  }
-  .pill-key { color: var(--muted); }
-  .pill-val { color: var(--green); font-weight: 700; }
+/* ── Layout ── */
+.app { position:relative; z-index:1; max-width:820px; margin:0 auto; padding:60px 28px 120px; }
 
-  .btn {
-    display: inline-flex; align-items: center; gap: 9px; padding: 14px 28px; border-radius: 11px;
-    font-family: var(--sans); font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s;
-  }
-  .btn-primary { background: linear-gradient(135deg, #6c63ff, #8b85ff); color: #fff; box-shadow: 0 4px 24px rgba(108,99,255,0.4); }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(108,99,255,0.55); }
-  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
-  .btn-dl { background: linear-gradient(135deg, #00e5a0, #00c98a); color: #0a0a0f; box-shadow: 0 4px 24px rgba(0,229,160,0.3); display: none; }
-  .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,229,160,0.45); }
-  .btn-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+/* ── Header ── */
+.header { margin-bottom:64px; text-align:center; }
 
-  .status-bar {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
-    padding: 13px 17px; display: flex; align-items: center; gap: 10px;
-    font-family: var(--mono); font-size: 12px; margin-bottom: 16px; color: var(--muted);
-  }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: background 0.3s; }
-  .dot.idle    { background: #3a3a52; }
-  .dot.ok      { background: var(--green); }
-  .dot.err     { background: var(--accent2); }
-  .dot.working { background: var(--accent); animation: blink 0.9s infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.rune-ring {
+  width:88px; height:88px; margin:0 auto 24px;
+  position:relative; animation:rune-spin 20s linear infinite;
+}
+.rune-ring svg { width:100%; height:100%; }
+@keyframes rune-spin { to { transform:rotate(360deg); } }
 
-  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
-  @media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
-  .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
-  .stat-n { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 5px; }
-  .stat-l { font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: 1px; text-transform: uppercase; }
+.inner-glyph {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:32px; animation:rune-spin 20s linear infinite reverse;
+  filter: drop-shadow(0 0 12px rgba(155,158,200,0.6));
+}
 
-  .warn-box {
-    background: rgba(255,209,102,0.07); border: 1px solid rgba(255,209,102,0.25); border-radius: 10px;
-    padding: 12px 15px; font-size: 12px; color: var(--yellow); font-family: var(--mono);
-    line-height: 1.7; margin-bottom: 16px; display: none; white-space: pre-line;
-  }
-  .err-box {
-    background: rgba(255,101,132,0.07); border: 1px solid rgba(255,101,132,0.25); border-radius: 10px;
-    padding: 12px 15px; font-size: 12px; color: var(--accent2); font-family: var(--mono);
-    line-height: 1.7; margin-bottom: 16px; display: none;
-  }
+.header-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  border:1px solid rgba(155,158,200,0.2);
+  color:var(--mist); font-family:var(--mono); font-size:9px; letter-spacing:3px;
+  padding:5px 16px; border-radius:2px; margin-bottom:22px; text-transform:uppercase;
+  background:rgba(155,158,200,0.04);
+}
 
-  .table-scroll { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); margin-top: 14px; }
-  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; }
-  thead { background: #13131e; }
-  th { padding: 10px 12px; text-align: left; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
-  td { padding: 9px 12px; border-bottom: 1px solid rgba(42,42,58,0.4); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(108,99,255,0.035); }
-  .t-link  { color: var(--accent); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-  .t-phone { color: var(--green); font-weight: 700; }
-  .t-muted { color: var(--muted); }
-  .chip { border-radius: 5px; padding: 2px 8px; font-size: 10px; }
-  .chip-g { background: rgba(0,229,160,0.13); color: var(--green); }
-  .chip-y { background: rgba(255,209,102,0.13); color: var(--yellow); }
+h1 {
+  font-family: var(--fell);
+  font-size:52px; font-weight:400; line-height:1.1; margin-bottom:6px;
+  font-style:italic;
+  background: linear-gradient(160deg, #e8e6f0 0%, #c8ccd8 30%, #9b9ec8 60%, #7ea89a 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  background-size:300% 300%; animation:gradient-breathe 8s ease infinite;
+}
+@keyframes gradient-breathe {
+  0%,100% { background-position:0% 50%; }
+  50%      { background-position:100% 50%; }
+}
+
+.subtitle {
+  color:var(--mist); font-size:13px; line-height:2;
+  font-family:var(--mono); letter-spacing:0.5px;
+}
+.subtitle em { color:var(--sage); font-style:normal; }
+
+/* ── Divider rune ── */
+.rune-divider {
+  display:flex; align-items:center; gap:16px;
+  margin:0 auto 0; max-width:300px;
+  color:rgba(155,158,200,0.2); font-size:10px; letter-spacing:4px;
+  font-family:var(--mono);
+}
+.rune-divider::before, .rune-divider::after {
+  content:''; flex:1; height:1px;
+  background:linear-gradient(to right, transparent, rgba(155,158,200,0.15), transparent);
+}
+
+/* ── Steps ── */
+.steps { display:flex; flex-direction:column; gap:0; margin-top:48px; }
+.step-wrap { position:relative; }
+.step-wrap + .step-wrap::before {
+  content:'';
+  display:block; width:1px; height:32px;
+  background:linear-gradient(to bottom, rgba(155,158,200,0.15), transparent);
+  margin:0 auto;
+}
+
+/* ── Cards ── */
+.step {
+  background: var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:36px;
+  transition:border-color 0.4s, box-shadow 0.4s;
+  position:relative; overflow:hidden;
+}
+.step::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(to right, transparent, rgba(155,158,200,0.12), transparent);
+}
+.step:hover {
+  border-color:rgba(155,158,200,0.2);
+  box-shadow:0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(155,158,200,0.04);
+}
+
+/* step corner glyphs */
+.step::before {
+  content:'✦'; position:absolute; top:14px; right:20px;
+  color:rgba(155,158,200,0.08); font-size:18px;
+  transition: color 0.3s;
+}
+.step:hover::before { color:rgba(155,158,200,0.18); }
+
+.step-header { display:flex; align-items:center; gap:18px; margin-bottom:28px; }
+
+.step-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:38px; height:38px; flex-shrink:0;
+  border:1px solid rgba(155,158,200,0.2);
+  border-radius:50%;
+  font-family:var(--mono); font-size:11px; color:var(--lilac);
+  background:rgba(155,158,200,0.05);
+}
+
+.step-title { font-family:var(--fell); font-size:18px; color:var(--silver); font-style:italic; }
+.step-desc  { font-size:11px; color:var(--mist); margin-top:4px; font-family:var(--mono); letter-spacing:0.5px; }
+
+/* ── Upload zone ── */
+.upload-zone {
+  border:1px dashed rgba(155,158,200,0.2); border-radius:4px; padding:44px 24px;
+  text-align:center; cursor:pointer; transition:all 0.3s; position:relative;
+  background:rgba(155,158,200,0.02);
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color:rgba(155,158,200,0.35);
+  background:rgba(155,158,200,0.05);
+  box-shadow:0 0 40px rgba(155,158,200,0.05);
+}
+.upload-zone input[type="file"] {
+  position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+}
+.upload-icon {
+  font-size:40px; margin-bottom:14px; display:block;
+  animation:glyph-hover 4s ease-in-out infinite;
+  filter:drop-shadow(0 0 16px rgba(155,158,200,0.3));
+}
+@keyframes glyph-hover {
+  0%,100% { transform:translateY(0) rotate(-2deg); }
+  50%      { transform:translateY(-8px) rotate(2deg); }
+}
+.upload-main { font-family:var(--fell); font-size:17px; color:var(--silver); font-style:italic; margin-bottom:6px; }
+.upload-sub  { font-size:10px; color:var(--mist); font-family:var(--mono); letter-spacing:1px; }
+.upload-ok {
+  display:none; margin-top:18px;
+  border:1px solid rgba(126,168,154,0.3);
+  border-radius:3px; padding:10px 20px;
+  color:var(--sage); font-family:var(--mono); font-size:11px;
+  background:rgba(126,168,154,0.06);
+  animation:fade-rise 0.4s ease;
+}
+@keyframes fade-rise { from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+/* ── Inputs ── */
+label {
+  display:block; font-size:9px; font-weight:400; letter-spacing:2px;
+  text-transform:uppercase; color:var(--mist); margin-bottom:10px;
+  font-family:var(--mono);
+}
+.input-wrap { position:relative; }
+.input-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:14px; pointer-events:none; opacity:0.6; }
+input[type="url"] {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:3px; padding:13px 14px 13px 42px; color:var(--silver);
+  font-family:var(--mono); font-size:12px; outline:none;
+  transition:border-color 0.3s, box-shadow 0.3s;
+}
+input[type="url"]:focus {
+  border-color:rgba(155,158,200,0.35);
+  box-shadow:0 0 0 3px rgba(155,158,200,0.06), 0 0 20px rgba(155,158,200,0.04);
+}
+input::placeholder { color:#2a2e3a; }
+.link-pair { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+@media(max-width:600px) { .link-pair{grid-template-columns:1fr;} }
+.field-group { margin-bottom:0; }
+
+/* ── Auto pills ── */
+.auto-pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+.pill {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:2px; padding:5px 13px;
+  font-family:var(--mono); font-size:10px;
+  transition:border-color 0.2s;
+}
+.pill:hover { border-color:rgba(155,158,200,0.2); }
+.pill-key { color:var(--mist); }
+.pill-val { color:var(--sage); }
+
+/* ── CC toggle ── */
+.cc-toggle-row {
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:3px; padding:14px 18px;
+}
+.cc-toggle-label { font-family:var(--mono); font-size:10px; color:var(--mist); white-space:nowrap; letter-spacing:1px; }
+.toggle-group { display:flex; gap:6px; }
+.toggle-btn {
+  padding:6px 16px; border-radius:2px; font-family:var(--mono); font-size:10px;
+  cursor:pointer; border:1px solid var(--border); background:transparent;
+  color:var(--mist); transition:all 0.2s; letter-spacing:0.5px;
+}
+.toggle-btn:hover { border-color:rgba(155,158,200,0.3); color:var(--silver); }
+.toggle-btn.active {
+  background:rgba(155,158,200,0.1);
+  border-color:rgba(155,158,200,0.3); color:var(--rune);
+  box-shadow:0 0 16px rgba(155,158,200,0.08);
+}
+.cc-input-wrap { display:none; align-items:center; gap:8px; }
+.cc-input-wrap.show { display:flex; animation:fade-rise 0.25s ease; }
+.cc-prefix { font-family:var(--mono); font-size:14px; color:var(--lilac); }
+input[type="number"].cc-input {
+  width:90px; background:var(--surface); border:1px solid rgba(155,158,200,0.25);
+  border-radius:3px; padding:7px 12px; color:var(--silver);
+  font-family:var(--mono); font-size:14px; outline:none;
+  box-shadow:0 0 12px rgba(155,158,200,0.06); transition:box-shadow 0.2s;
+}
+input[type="number"].cc-input:focus { box-shadow:0 0 0 3px rgba(155,158,200,0.1); }
+.cc-note { font-family:var(--mono); font-size:10px; color:var(--gold); }
+
+/* ── Buttons ── */
+.btn {
+  display:inline-flex; align-items:center; gap:10px; padding:13px 28px; border-radius:3px;
+  font-family:var(--mono); font-weight:400; font-size:11px; cursor:pointer; border:none;
+  transition:all 0.3s; letter-spacing:1.5px; text-transform:uppercase;
+}
+.btn-primary {
+  background:transparent;
+  border:1px solid rgba(155,158,200,0.35);
+  color:var(--rune);
+  box-shadow:0 0 0px rgba(155,158,200,0);
+  position:relative; overflow:hidden;
+}
+.btn-primary::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(155,158,200,0.08), rgba(126,168,154,0.05));
+  opacity:0; transition:opacity 0.3s;
+}
+.btn-primary:hover { border-color:rgba(155,158,200,0.6); box-shadow:0 0 30px rgba(155,158,200,0.1); }
+.btn-primary:hover::before { opacity:1; }
+.btn-primary:disabled {
+  opacity:0.25; cursor:not-allowed;
+  border-color:var(--border); color:var(--mist);
+}
+.btn-dl {
+  border:1px solid rgba(126,168,154,0.4);
+  color:var(--sage); background:rgba(126,168,154,0.05); display:none;
+}
+.btn-dl:hover { border-color:rgba(126,168,154,0.7); box-shadow:0 0 24px rgba(126,168,154,0.1); }
+.btn-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+
+/* ── Status ── */
+.status-bar {
+  background:var(--surface2); border:1px solid var(--border); border-radius:3px;
+  padding:12px 18px; display:flex; align-items:center; gap:10px;
+  font-family:var(--mono); font-size:11px; margin-bottom:18px; color:var(--mist);
+  transition:border-color 0.3s; letter-spacing:0.5px;
+}
+.status-bar.s-ok  { border-color:rgba(126,168,154,0.25); }
+.status-bar.s-err { border-color:rgba(200,155,155,0.25); }
+.dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; transition:background 0.3s; }
+.dot.idle    { background:#2a2e3a; }
+.dot.ok      { background:var(--sage); box-shadow:0 0 8px var(--sage); }
+.dot.err     { background:#c87a7a; box-shadow:0 0 8px #c87a7a; }
+.dot.working { background:var(--lilac); box-shadow:0 0 8px var(--lilac); animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.6)} }
+
+/* ── Stats ── */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
+@media(max-width:600px) { .stats-grid{grid-template-columns:repeat(2,1fr);} }
+.stat-card {
+  background:var(--surface2); border:1px solid var(--border); border-radius:3px;
+  padding:18px 12px; text-align:center;
+  animation:stat-in 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  transition:border-color 0.2s;
+}
+.stat-card:hover { border-color:rgba(155,158,200,0.2); }
+.stat-card:nth-child(1){animation-delay:0s}
+.stat-card:nth-child(2){animation-delay:0.07s}
+.stat-card:nth-child(3){animation-delay:0.14s}
+.stat-card:nth-child(4){animation-delay:0.21s}
+@keyframes stat-in { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
+.stat-n { font-family:var(--fell); font-size:34px; line-height:1; margin-bottom:6px; font-style:italic; }
+.stat-l { font-size:8px; color:var(--mist); font-family:var(--mono); letter-spacing:2px; text-transform:uppercase; }
+
+/* ── Messages ── */
+.warn-box {
+  background:rgba(201,185,122,0.04); border:1px solid rgba(201,185,122,0.2);
+  border-radius:3px; padding:12px 16px; font-size:11px; color:var(--gold);
+  font-family:var(--mono); line-height:1.8; margin-bottom:16px; display:none;
+  white-space:pre-line; animation:fade-rise 0.25s ease;
+}
+.err-box {
+  background:rgba(200,155,155,0.04); border:1px solid rgba(200,155,155,0.2);
+  border-radius:3px; padding:12px 16px; font-size:11px; color:#c89090;
+  font-family:var(--mono); line-height:1.8; margin-bottom:16px; display:none;
+  animation:fade-rise 0.25s ease;
+}
+
+/* ── Table ── */
+.table-scroll { overflow-x:auto; border-radius:3px; border:1px solid var(--border); margin-top:16px; }
+table { width:100%; border-collapse:collapse; font-family:var(--mono); font-size:10px; }
+thead { background:#0e1014; }
+th { padding:11px 14px; text-align:left; font-size:8px; letter-spacing:2px;
+     text-transform:uppercase; color:var(--mist); border-bottom:1px solid var(--border); white-space:nowrap; }
+td { padding:10px 14px; border-bottom:1px solid rgba(37,42,53,0.6); vertical-align:middle; transition:background 0.15s; }
+tr { animation:row-in 0.35s ease both; }
+tr:nth-child(1){animation-delay:0.05s} tr:nth-child(2){animation-delay:0.1s}
+tr:nth-child(3){animation-delay:0.15s} tr:nth-child(4){animation-delay:0.2s}
+tr:nth-child(5){animation-delay:0.25s}
+@keyframes row-in { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(155,158,200,0.03); }
+.t-link  { color:var(--lilac); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
+.t-phone { color:var(--sage); }
+.t-muted { color:var(--mist); }
+.chip { border-radius:2px; padding:2px 9px; font-size:9px; }
+.chip-g { background:rgba(126,168,154,0.1); color:var(--sage); border:1px solid rgba(126,168,154,0.2); }
+.chip-y { background:rgba(155,158,200,0.1); color:var(--lilac); border:1px solid rgba(155,158,200,0.2); }
+
+/* ── Auto settings card ── */
+.step-auto {
+  background:linear-gradient(160deg, #111318, #13141a);
+  border-color:rgba(155,158,200,0.12);
+}
+.step-auto:hover { border-color:rgba(155,158,200,0.25); }
+
+/* ── Footer ── */
+.footer {
+  text-align:center; margin-top:56px; font-family:var(--fell); font-style:italic;
+  font-size:13px; color:var(--mist); animation:fade-rise 1s ease both;
+  letter-spacing:1px;
+}
+.footer-rune { display:block; font-size:18px; margin-bottom:8px; opacity:0.3; }
+
+/* ── Floating rune particles ── */
+.rune-particle {
+  position:fixed; pointer-events:none; z-index:0;
+  font-family:var(--mono); font-size:10px; color:var(--lilac);
+  animation:rune-float linear infinite;
+  opacity:0;
+}
+@keyframes rune-float {
+  0%   { opacity:0; transform:translateY(0) rotate(0deg); }
+  15%  { opacity:0.25; }
+  85%  { opacity:0.1; }
+  100% { opacity:0; transform:translateY(-120px) rotate(180deg); }
+}
 </style>
 </head>
 <body>
+
+<canvas id="canvas"></canvas>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
 <div class="app">
 
+  <!-- Header -->
   <div class="header">
-    <div class="header-badge">⚡ be10x · Automation Tool</div>
+    <div class="rune-ring">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" stroke="rgba(155,158,200,0.15)" stroke-width="1"/>
+        <circle cx="50" cy="50" r="38" stroke="rgba(155,158,200,0.08)" stroke-width="0.5" stroke-dasharray="3 6"/>
+        <circle cx="50" cy="4" r="2.5" fill="rgba(155,158,200,0.5)"/>
+        <circle cx="96" cy="50" r="2" fill="rgba(126,168,154,0.4)"/>
+        <circle cx="4" cy="50" r="2" fill="rgba(126,168,154,0.4)"/>
+        <circle cx="50" cy="96" r="2.5" fill="rgba(155,158,200,0.5)"/>
+        <circle cx="17" cy="17" r="1.5" fill="rgba(201,185,122,0.3)"/>
+        <circle cx="83" cy="17" r="1.5" fill="rgba(201,185,122,0.3)"/>
+        <circle cx="17" cy="83" r="1.5" fill="rgba(201,185,122,0.3)"/>
+        <circle cx="83" cy="83" r="1.5" fill="rgba(201,185,122,0.3)"/>
+        <path d="M50 8 L54 42 L50 50 L46 42 Z" fill="rgba(155,158,200,0.06)"/>
+        <path d="M92 50 L58 54 L50 50 L58 46 Z" fill="rgba(126,168,154,0.06)"/>
+        <path d="M50 92 L46 58 L50 50 L54 58 Z" fill="rgba(155,158,200,0.06)"/>
+        <path d="M8 50 L42 46 L50 50 L42 54 Z" fill="rgba(126,168,154,0.06)"/>
+      </svg>
+      <div class="inner-glyph">✦</div>
+    </div>
+
+    <div class="header-badge">✦ be10x · ancient craft</div>
     <h1>Payment Link<br>Generator</h1>
     <p class="subtitle">
-      3 steps only &nbsp;·&nbsp; Upload CSV &nbsp;·&nbsp; Enter 2 links &nbsp;·&nbsp; Download output<br>
-      <strong>Everything else is fully automatic</strong>
+      Upload scroll &nbsp;·&nbsp; Inscribe 2 seals &nbsp;·&nbsp; Receive enchanted output<br>
+      <em>All else is woven automatically</em>
     </p>
   </div>
+
+  <div class="rune-divider">✦ · · ✦</div>
 
   <div class="steps">
 
     <!-- Step 1 -->
+    <div class="step-wrap">
     <div class="step">
       <div class="step-header">
-        <div class="step-badge">1</div>
+        <div class="step-badge">I</div>
         <div>
-          <div class="step-title">Upload Zoom Registration CSV</div>
-          <div class="step-desc">Full name (First + Last), email &amp; phone extracted automatically</div>
+          <div class="step-title">Upload Zoom Registration Scroll</div>
+          <div class="step-desc">name · email · phone — drawn forth by ancient magic</div>
         </div>
       </div>
       <div class="upload-zone" id="uploadZone">
         <input type="file" id="csvFile" accept=".csv" onchange="handleFile(event)">
-        <div class="upload-icon">📂</div>
-        <div class="upload-main">Drop your CSV here</div>
-        <div class="upload-sub">or click to browse &nbsp;·&nbsp; .csv format</div>
+        <span class="upload-icon">📜</span>
+        <div class="upload-main">Place your CSV scroll here</div>
+        <div class="upload-sub">or tap to summon from the ether &nbsp;·&nbsp; .csv only</div>
         <div class="upload-ok" id="uploadOk"></div>
       </div>
     </div>
+    </div>
 
     <!-- Step 2 -->
+    <div class="step-wrap">
     <div class="step">
       <div class="step-header">
-        <div class="step-badge">2</div>
+        <div class="step-badge">II</div>
         <div>
-          <div class="step-title">Enter Your 2 Payment Links</div>
-          <div class="step-desc">Only manual input required — paste the base URLs below</div>
+          <div class="step-title">Inscribe Your Two Payment Seals</div>
+          <div class="step-desc">the only runes you must carve by hand</div>
         </div>
       </div>
       <div class="link-pair">
         <div class="field-group">
-          <label>Main Payment Link</label>
+          <label>Primary Payment Seal</label>
           <div class="input-wrap">
-            <span class="input-icon">💳</span>
+            <span class="input-icon">◈</span>
             <input type="url" id="mainLink" placeholder="https://pay.be10x.in/checkout/...">
           </div>
         </div>
         <div class="field-group">
-          <label>Alternate Payment Link</label>
+          <label>Alternate Payment Seal</label>
           <div class="input-wrap">
-            <span class="input-icon">🔗</span>
+            <span class="input-icon">◇</span>
             <input type="url" id="altLink" placeholder="https://pay.be10x.in/checkout/...">
           </div>
         </div>
       </div>
     </div>
+    </div>
 
-    <!-- Auto settings (read-only display) -->
-    <div class="step">
+    <!-- Auto settings -->
+    <div class="step-wrap">
+    <div class="step step-auto">
       <div class="step-header">
-        <div class="step-badge" style="background:rgba(0,229,160,0.15);border-color:var(--green);color:var(--green)">⚙</div>
+        <div class="step-badge" style="border-color:rgba(126,168,154,0.3);color:var(--sage);background:rgba(126,168,154,0.05)">⚙</div>
         <div>
-          <div class="step-title" style="color:var(--green)">Output Settings — Fully Automatic</div>
-          <div class="step-desc">These values are set automatically — no input needed</div>
+          <div class="step-title" style="color:var(--sage)">Bound by Ancient Law</div>
+          <div class="step-desc">inscribed automatically — no mortal hand required</div>
         </div>
       </div>
       <div class="auto-pills">
-        <div class="pill"><span class="pill-key">Name</span><span class="pill-val">First + Last name</span></div>
-        <div class="pill"><span class="pill-key">CountryCode</span><span class="pill-val">auto-detected from phone</span></div>
+        <div class="pill"><span class="pill-key">Name</span><span class="pill-val">First + Last</span></div>
         <div class="pill"><span class="pill-key">Phone</span><span class="pill-val">last 10 digits</span></div>
         <div class="pill"><span class="pill-key">AllowBroadcast</span><span class="pill-val">True</span></div>
         <div class="pill"><span class="pill-key">AllowSMS</span><span class="pill-val">True</span></div>
         <div class="pill"><span class="pill-key">msg</span><span class="pill-val">Al Career Accelerator - Inner Circle Program</span></div>
-        <div class="pill"><span class="pill-key">formlink</span><span class="pill-val">https://forms.gle/MyYdQZcvSZfyjmBYA</span></div>
-        <div class="pill"><span class="pill-key">Duplicates</span><span class="pill-val">removed automatically</span></div>
+        <div class="pill"><span class="pill-key">Duplicates</span><span class="pill-val">removed by ward</span></div>
       </div>
+      <div class="cc-toggle-row">
+        <span class="cc-toggle-label">⊕ Country Code</span>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="btnAuto"   onclick="setCCMode('auto')">Auto Detect</button>
+          <button class="toggle-btn"        id="btnManual" onclick="setCCMode('manual')">Manual Override</button>
+        </div>
+        <div class="cc-input-wrap" id="ccInputWrap">
+          <span class="cc-prefix">+</span>
+          <input type="number" class="cc-input" id="manualCC" value="91" min="1" max="9999" placeholder="91">
+          <span class="cc-note">applied to all rows ✦</span>
+        </div>
+      </div>
+    </div>
     </div>
 
     <!-- Step 3 -->
+    <div class="step-wrap">
     <div class="step">
       <div class="step-header">
-        <div class="step-badge">3</div>
+        <div class="step-badge">III</div>
         <div>
-          <div class="step-title">Preview &amp; Download</div>
-          <div class="step-desc">Review first 5 rows then download the full output CSV</div>
+          <div class="step-title">Reveal &amp; Receive the Enchanted Scroll</div>
+          <div class="step-desc">behold the fruits of your working</div>
         </div>
       </div>
 
       <div class="err-box"  id="errBox"></div>
       <div class="warn-box" id="warnBox"></div>
 
-      <div class="status-bar">
+      <div class="status-bar" id="statusBar">
         <div class="dot idle" id="dot"></div>
-        <span id="statusTxt">Upload a CSV to get started…</span>
+        <span id="statusTxt">Awaiting your scroll…</span>
       </div>
 
       <div id="statsGrid" class="stats-grid" style="display:none">
         <div class="stat-card">
-          <div class="stat-n" style="color:var(--accent)" id="sTotal">0</div>
+          <div class="stat-n" style="color:var(--lilac)"  id="sTotal">0</div>
           <div class="stat-l">CSV Rows</div>
         </div>
         <div class="stat-card">
-          <div class="stat-n" style="color:var(--green)" id="sKept">0</div>
+          <div class="stat-n" style="color:var(--sage)"   id="sKept">0</div>
           <div class="stat-l">Output Rows</div>
         </div>
         <div class="stat-card">
-          <div class="stat-n" style="color:var(--yellow)" id="sDups">0</div>
-          <div class="stat-l">Duplicates Removed</div>
+          <div class="stat-n" style="color:var(--gold)"   id="sDups">0</div>
+          <div class="stat-l">Duplicates</div>
         </div>
         <div class="stat-card">
-          <div class="stat-n" style="color:var(--accent2)" id="sSkip">0</div>
-          <div class="stat-l">Skipped (no phone)</div>
+          <div class="stat-n" style="color:#c89090"       id="sSkip">0</div>
+          <div class="stat-l">Skipped</div>
         </div>
       </div>
 
-      <div class="btn-row" style="margin-bottom:18px">
-        <button class="btn btn-primary" id="previewBtn" onclick="run()" disabled>👁&nbsp; Preview Output</button>
-        <button class="btn btn-dl" id="dlBtn" onclick="download()">⬇&nbsp; Download CSV</button>
+      <div class="btn-row" style="margin-bottom:20px">
+        <button class="btn btn-primary" id="previewBtn" onclick="run()" disabled>
+          ✦ Reveal Output
+        </button>
+        <button class="btn btn-dl" id="dlBtn" onclick="download()">
+          ↓ Download Scroll
+        </button>
       </div>
 
       <div id="previewWrap" style="display:none">
-        <p style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:6px">First 5 rows of output:</p>
+        <p style="font-size:10px;color:var(--mist);font-family:var(--mono);margin-bottom:10px;letter-spacing:1px">
+          ✦ FIRST 5 ROWS OF YOUR ENCHANTED OUTPUT
+        </p>
         <div class="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>#</th><th>Name (Full)</th><th>CC</th><th>Phone</th>
+                <th>#</th><th>Name</th><th>CC</th><th>Phone</th>
                 <th>Broadcast</th><th>SMS</th>
-                <th>price (main)</th><th>alter (alt)</th>
-                <th>msg</th><th>formlink</th>
+                <th>price (main)</th><th>alter (alt)</th><th>msg</th>
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
@@ -301,21 +581,139 @@
         </div>
       </div>
     </div>
+    </div>
 
+  </div><!-- /steps -->
+
+  <div class="footer">
+    <span class="footer-rune">✦ · ✦ · ✦</span>
+    woven with ancient craft &nbsp;·&nbsp; be10x automation
   </div>
 </div>
 
 <script>
-/* ── Fixed output values ─────────────────────────────────────────── */
+/* ══════════════════════════════════════════
+   CANVAS — subtle starfield + rune glints
+══════════════════════════════════════════ */
+(function() {
+  const c = document.getElementById('canvas');
+  const ctx = c.getContext('2d');
+  let stars = [], glints = [];
+
+  function resize() {
+    c.width  = window.innerWidth;
+    c.height = window.innerHeight;
+  }
+
+  function init() {
+    stars = Array.from({length: 160}, () => ({
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
+      r: Math.random() * 1.2 + 0.1,
+      a: Math.random() * 0.6,
+      da: (Math.random() - 0.5) * 0.004,
+      color: ['#c8ccd8','#9b9ec8','#7ea89a','#a8bfd4','#c9b97a'][Math.floor(Math.random()*5)]
+    }));
+    glints = Array.from({length: 8}, () => makeGlint());
+  }
+
+  function makeGlint() {
+    return {
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
+      life: 0, maxLife: 90 + Math.random()*80,
+      size: Math.random() * 12 + 6,
+      color: ['#c8ccd8','#9b9ec8','#a8bfd4'][Math.floor(Math.random()*3)]
+    };
+  }
+
+  function drawCross(ctx, x, y, size, alpha, color) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.5;
+    ctx.shadowBlur = 8; ctx.shadowColor = color;
+    ctx.beginPath();
+    ctx.moveTo(x - size, y); ctx.lineTo(x + size, y);
+    ctx.moveTo(x, y - size); ctx.lineTo(x, y + size);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    // stars
+    stars.forEach(s => {
+      s.a += s.da;
+      if (s.a <= 0 || s.a >= 0.6) s.da *= -1;
+      ctx.globalAlpha = s.a;
+      ctx.fillStyle = s.color;
+      ctx.shadowBlur = 4; ctx.shadowColor = s.color;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    // glints (✦ cross sparkles)
+    glints.forEach((g, i) => {
+      g.life++;
+      const t = g.life / g.maxLife;
+      const alpha = t < 0.3 ? t/0.3 * 0.35 : t > 0.7 ? (1-t)/0.3 * 0.35 : 0.35;
+      drawCross(ctx, g.x, g.y, g.size * Math.sin(t * Math.PI), alpha, g.color);
+      if (g.life >= g.maxLife) glints[i] = makeGlint();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize(); init(); draw();
+  window.addEventListener('resize', () => { resize(); init(); });
+})();
+
+/* ══════════════════════════════════════════
+   CLICK RUNE PARTICLES
+══════════════════════════════════════════ */
+const RUNE_CHARS = ['✦','✧','◈','◇','⊕','⟡','⌘','◉'];
+document.addEventListener('click', e => {
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement('div');
+    p.className = 'rune-particle';
+    p.textContent = RUNE_CHARS[Math.floor(Math.random() * RUNE_CHARS.length)];
+    const colors = ['#c8ccd8','#9b9ec8','#7ea89a','#a8bfd4','#c9b97a'];
+    p.style.cssText = `
+      left:${e.clientX + (Math.random()-0.5)*50}px;
+      top:${e.clientY + (Math.random()-0.5)*50}px;
+      color:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${1.2 + Math.random()*1.2}s;
+      animation-delay:${Math.random()*0.25}s;
+      font-size:${8 + Math.random()*8}px;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2800);
+  }
+});
+
+/* ══════════════════════════════════════════
+   APP LOGIC
+══════════════════════════════════════════ */
 const AUTO = {
   AllowBroadcast: true,
   AllowSMS:       true,
   msg:            'Al Career Accelerator - Inner Circle Program',
-  formlink:       'https://forms.gle/MyYdQZcvSZfyjmBYA',
   defaultCC:      '91',
 };
 
-/* ── Country code database (longest match first) ─────────────────── */
+let ccMode = 'auto';
+function setCCMode(mode) {
+  ccMode = mode;
+  document.getElementById('btnAuto').classList.toggle('active',   mode==='auto');
+  document.getElementById('btnManual').classList.toggle('active', mode==='manual');
+  document.getElementById('ccInputWrap').classList.toggle('show', mode==='manual');
+}
+function getManualCC() {
+  const v = parseInt(document.getElementById('manualCC').value);
+  return isNaN(v) || v < 1 ? '91' : String(v);
+}
+
 const CC_DB = [
   '1242','1246','1264','1268','1284','1340','1345','1441','1473','1649','1664',
   '1670','1671','1684','1721','1758','1767','1784','1787','1809','1829','1849',
@@ -335,8 +733,7 @@ const CC_DB = [
   '995','996','998',
   '20','27','30','31','32','33','34','36','39','40','41','43','44','45','46','47',
   '48','49','51','52','53','54','55','56','57','58','60','61','62','63','64','65',
-  '66','81','82','84','86','90','91','92','93','94','95','98',
-  '1','7',
+  '66','81','82','84','86','90','91','92','93','94','95','98','1','7',
 ];
 
 function splitPhone(digits) {
@@ -344,231 +741,204 @@ function splitPhone(digits) {
     if (digits.startsWith(cc) && digits.length - cc.length === 10)
       return { cc, local: digits.slice(cc.length) };
   }
-  // fallback: last 10 = local number
-  return { cc: digits.slice(0, digits.length - 10) || AUTO.defaultCC, local: digits.slice(-10) };
+  return { cc: digits.slice(0, digits.length-10) || AUTO.defaultCC, local: digits.slice(-10) };
 }
 
-function parsePhone(raw) {
+function parsePhone(raw, overrideCC) {
   if (!raw) return null;
   const s = String(raw).trim();
-  if (!s || s.toLowerCase() === 'nan') return null;
-  const digits = s.replace(/\D/g, '');
+  if (!s || s.toLowerCase()==='nan') return null;
+  const digits = s.replace(/\D/g,'');
   if (digits.length < 10) return null;
-  if (digits.length === 10) return { cc: AUTO.defaultCC, local: digits }; // ← fixed: always string '91'
+  if (overrideCC) return { cc: overrideCC, local: digits.slice(-10) };
+  if (digits.length === 10) return { cc: AUTO.defaultCC, local: digits };
   return splitPhone(digits);
 }
 
-/* ── State ─────────────────────────────────────────────────────────── */
-let rows    = [];
-let outRows = [];
+let rows = [], outRows = [];
 
-/* ── CSV parsing ────────────────────────────────────────────────────── */
 function handleFile(e) {
-  const f = e.target.files[0];
-  if (!f) return;
+  const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = ev => parseCSV(ev.target.result, f.name);
   r.readAsText(f);
 }
 
 function csvLine(line) {
-  const res = []; let cur = '', q = false;
+  const res=[]; let cur='', q=false;
   for (const c of line) {
-    if (c === '"') q = !q;
-    else if (c === ',' && !q) { res.push(cur.trim()); cur = ''; }
-    else cur += c;
+    if(c==='"') q=!q;
+    else if(c===','&&!q){res.push(cur.trim());cur='';}
+    else cur+=c;
   }
-  res.push(cur.trim());
-  return res;
+  res.push(cur.trim()); return res;
 }
 
-function clean(s) { return (s || '').replace(/['"]/g, '').trim(); }
+function clean(s) { return (s||'').replace(/['"]/g,'').trim(); }
 
 function parseCSV(text, fname) {
   clearMsg();
   const lines = text.split(/\r?\n/);
-
   let hi = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (/first.?name/i.test(lines[i])) { hi = i; break; }
-  }
-  if (hi === -1) { err('Cannot find "First Name" header. Is this a Zoom Registration Report?'); return; }
+  for (let i=0;i<lines.length;i++) { if(/first.?name/i.test(lines[i])){ hi=i; break; } }
+  if (hi===-1) { err('Cannot find "First Name" header. Is this a Zoom Registration Report?'); return; }
 
-  const hdrs = csvLine(lines[hi]).map(h => clean(h).toLowerCase());
+  const hdrs = csvLine(lines[hi]).map(h=>clean(h).toLowerCase());
   const I = {
-    fn:    hdrs.findIndex(h => /^first.?name$/.test(h)),
-    ln:    hdrs.findIndex(h => /^last.?name$/.test(h)),   // ← now finding Last Name too
-    email: hdrs.findIndex(h => h.includes('email')),
-    phone: hdrs.findIndex(h => h.includes('phone')),
+    fn:    hdrs.findIndex(h=>/^first.?name$/.test(h)),
+    ln:    hdrs.findIndex(h=>/^last.?name$/.test(h)),
+    email: hdrs.findIndex(h=>h.includes('email')),
+    phone: hdrs.findIndex(h=>h.includes('phone')),
   };
+  if (I.fn===-1||I.email===-1||I.phone===-1) { err(`Missing columns. Found: ${hdrs.join(', ')}`); return; }
 
-  if (I.fn === -1 || I.email === -1 || I.phone === -1) {
-    err(`Missing columns. Found: ${hdrs.join(', ')}`); return;
+  rows=[];
+  for (let i=hi+1;i<lines.length;i++) {
+    const l=lines[i].trim(); if(!l) continue;
+    const c=csvLine(l);
+    const fn=clean(c[I.fn]), ln=I.ln!==-1?clean(c[I.ln]):'';
+    const fullName=[fn,ln].filter(Boolean).join(' ');
+    const email=clean(c[I.email]), phone=clean(c[I.phone]);
+    if(!fn&&!email&&!phone) continue;
+    rows.push({fullName,email,phoneRaw:phone});
   }
-
-  rows = [];
-  for (let i = hi + 1; i < lines.length; i++) {
-    const l = lines[i].trim(); if (!l) continue;
-    const c = csvLine(l);
-    const fn    = clean(c[I.fn]);
-    const ln    = I.ln !== -1 ? clean(c[I.ln]) : '';           // ← Last Name
-    const fullName = [fn, ln].filter(Boolean).join(' ');        // ← Full name = First + Last
-    const email = clean(c[I.email]);
-    const phone = clean(c[I.phone]);
-    if (!fn && !email && !phone) continue;
-    rows.push({ fullName, email, phoneRaw: phone });
-  }
-
   if (!rows.length) { err('No data rows found after header.'); return; }
 
-  const ok = document.getElementById('uploadOk');
-  ok.textContent = `✓  ${fname}  ·  ${rows.length} attendees loaded`;
-  ok.style.display = 'block';
-  status('ok', `${rows.length} rows loaded — click Preview Output to continue`);
-  document.getElementById('previewBtn').disabled = false;
+  const ok=document.getElementById('uploadOk');
+  ok.textContent=`✦  ${fname}  ·  ${rows.length} records summoned`;
+  ok.style.display='block';
+  status('ok',`${rows.length} rows inscribed — click ✦ Reveal Output to continue`);
+  document.getElementById('previewBtn').disabled=false;
 }
 
-/* ── Build output rows ──────────────────────────────────────────────── */
 function buildOutput() {
-  const mainLink = document.getElementById('mainLink').value.trim();
-  const altLink  = document.getElementById('altLink').value.trim();
-
-  let noPhone = 0, total = 0;
-  const seen = new Set(), dups = [];
-  outRows = [];
-
+  const mainLink  = document.getElementById('mainLink').value.trim();
+  const altLink   = document.getElementById('altLink').value.trim();
+  const overrideCC= ccMode==='manual'?getManualCC():null;
+  let noPhone=0, total=0;
+  const seen=new Set(), dups=[];
+  outRows=[];
   for (const r of rows) {
     total++;
-    const p = parsePhone(r.phoneRaw);
-    if (!p) { noPhone++; continue; }
-
-    const key = p.cc + p.local;
-    if (seen.has(key)) { dups.push(`${r.fullName} (+${p.cc}${p.local})`); continue; }
+    const p=parsePhone(r.phoneRaw,overrideCC);
+    if(!p){noPhone++;continue;}
+    const key=p.cc+p.local;
+    if(seen.has(key)){dups.push(`${r.fullName} (+${p.cc}${p.local})`);continue;}
     seen.add(key);
-
-    // ★ CountryCode stored as a number — using Number() not parseInt to avoid NaN→0
-    const ccNum = Number(p.cc);
-
+    const ccNum=Number(p.cc);
     outRows.push({
-      Name:           r.fullName,                 // ← Full name
-      CountryCode:    isNaN(ccNum) ? 91 : ccNum,  // ← Safe fallback for CC
-      Phone:          p.local,
-      AllowBroadcast: AUTO.AllowBroadcast,
-      AllowSMS:       AUTO.AllowSMS,
-      price:          buildLink(mainLink, r.email, p.local, p.cc, r.fullName),
-      alter:          buildLink(altLink,  r.email, p.local, p.cc, r.fullName),
-      msg:            AUTO.msg,
-      formlink:       AUTO.formlink,
+      Name:          r.fullName,
+      CountryCode:   isNaN(ccNum)?91:ccNum,
+      Phone:         p.local,
+      AllowBroadcast:AUTO.AllowBroadcast,
+      AllowSMS:      AUTO.AllowSMS,
+      price:         buildLink(mainLink,r.email,p.local,p.cc,r.fullName),
+      alter:         buildLink(altLink, r.email,p.local,p.cc,r.fullName),
+      msg:           AUTO.msg,
     });
   }
-  return { total, kept: outRows.length, dups, noPhone };
+  return {total,kept:outRows.length,dups,noPhone};
 }
 
-function buildLink(base, email, phone, cc, name) {
-  if (!base) return '';
+function buildLink(base,email,phone,cc,name) {
+  if(!base) return '';
   return `${base}?email=${encodeURIComponent(email)}&phonenumber=${encodeURIComponent('+'+cc+phone)}&name=${encodeURIComponent(name)}`;
 }
 
-/* ── Preview ────────────────────────────────────────────────────────── */
 function run() {
   clearMsg();
-  if (!rows.length) { err('Please upload a CSV file first.'); return; }
-  status('working', 'Building output…');
+  if(!rows.length){err('Please summon a CSV scroll first — Step I');return;}
+  status('working','Weaving the spell…');
+  setTimeout(()=>{
+    const s=buildOutput();
+    document.getElementById('sTotal').textContent=s.total;
+    document.getElementById('sKept').textContent=s.kept;
+    document.getElementById('sDups').textContent=s.dups.length;
+    document.getElementById('sSkip').textContent=s.noPhone;
+    const sg=document.getElementById('statsGrid');
+    sg.style.display='grid';
+    sg.querySelectorAll('.stat-card').forEach(c=>{c.style.animation='none';void c.offsetWidth;c.style.animation='';});
 
-  setTimeout(() => {
-    const s = buildOutput();
-
-    document.getElementById('sTotal').textContent = s.total;
-    document.getElementById('sKept').textContent  = s.kept;
-    document.getElementById('sDups').textContent  = s.dups.length;
-    document.getElementById('sSkip').textContent  = s.noPhone;
-    document.getElementById('statsGrid').style.display = 'grid';
-
-    const w = [];
-    if (s.dups.length) {
-      const p = s.dups.slice(0,5).join(', ');
-      w.push(`⚠ ${s.dups.length} duplicate phone(s) removed: ${p}${s.dups.length>5?` …+${s.dups.length-5} more`:''}`);
+    const w=[];
+    if(s.dups.length){
+      const p=s.dups.slice(0,5).join(', ');
+      w.push(`⚠ ${s.dups.length} duplicate phone(s) dissolved: ${p}${s.dups.length>5?` …+${s.dups.length-5} more`:''}`);
     }
-    if (s.noPhone) w.push(`⚠ ${s.noPhone} row(s) skipped — no valid phone number.`);
-    if (w.length) warnMsg(w.join('\n'));
+    if(s.noPhone) w.push(`⚠ ${s.noPhone} row(s) banished — no valid phone number.`);
+    if(w.length) warnMsg(w.join('\n'));
 
-    const tbody = document.getElementById('tbody');
-    tbody.innerHTML = '';
-    outRows.slice(0,5).forEach((r,i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
+    const tbody=document.getElementById('tbody');
+    tbody.innerHTML='';
+    outRows.slice(0,5).forEach((r,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
         <td class="t-muted">${i+1}</td>
-        <td style="color:var(--text);white-space:nowrap">${r.Name}</td>
+        <td style="color:var(--silver);white-space:nowrap">${r.Name}</td>
         <td><span class="chip chip-y">${r.CountryCode}</span></td>
         <td class="t-phone">${r.Phone}</td>
         <td><span class="chip chip-g">True</span></td>
         <td><span class="chip chip-g">True</span></td>
         <td><span class="t-link" title="${r.price}">${r.price||'—'}</span></td>
         <td><span class="t-link" title="${r.alter}">${r.alter||'—'}</span></td>
-        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${r.msg}</td>
-        <td><span class="t-link" title="${r.formlink}">${r.formlink}</span></td>
+        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mist)">${r.msg}</td>
       `;
       tbody.appendChild(tr);
     });
 
-    document.getElementById('previewWrap').style.display = 'block';
-    document.getElementById('dlBtn').style.display = 'inline-flex';
-    status('ok', `Ready — ${s.kept} rows · ${s.dups.length} duplicates removed · ${s.noPhone} skipped`);
-  }, 60);
+    document.getElementById('previewWrap').style.display='block';
+    document.getElementById('dlBtn').style.display='inline-flex';
+    status('ok',`✦ Working complete — ${s.kept} rows bound · ${s.dups.length} duplicates dissolved · ${s.noPhone} banished`);
+  },80);
 }
 
-/* ── Download ───────────────────────────────────────────────────────── */
+/* Download — NO form link column */
 function download() {
-  if (!outRows.length) { run(); return; }
-  const cols = ['Name','CountryCode','Phone','AllowBroadcast','AllowSMS','price','alter','msg','formlink'];
-  const lines = [cols.join(',')];
-  outRows.forEach(r => {
-    const v = cols.map(c => {
-      let s = String(r[c] !== undefined ? r[c] : '');
-      if (s.includes(',') || s.includes('"') || s.includes('\n')) s = '"' + s.replace(/"/g,'""') + '"';
+  if(!outRows.length){run();return;}
+  const cols=['Name','CountryCode','Phone','AllowBroadcast','AllowSMS','price','alter','msg'];
+  const lines=[cols.join(',')];
+  outRows.forEach(r=>{
+    const v=cols.map(c=>{
+      let s=String(r[c]!==undefined?r[c]:'');
+      if(s.includes(',')||s.includes('"')||s.includes('\n')) s='"'+s.replace(/"/g,'""')+'"';
       return s;
     });
     lines.push(v.join(','));
   });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type:'text/csv;charset=utf-8;' }));
-  a.download = 'Output_PaymentLinks.csv';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'}));
+  a.download='Output_PaymentLinks.csv';
   a.click();
   URL.revokeObjectURL(a.href);
-  status('ok', `Downloaded Output_PaymentLinks.csv — ${outRows.length} rows`);
+  status('ok',`✦ Scroll delivered — ${outRows.length} rows enchanted`);
 }
 
-/* ── UI helpers ─────────────────────────────────────────────────────── */
-function status(type, text) {
-  document.getElementById('dot').className = 'dot ' + type;
-  document.getElementById('statusTxt').textContent = text;
+function status(type,text){
+  document.getElementById('dot').className='dot '+type;
+  document.getElementById('statusTxt').textContent=text;
+  const bar=document.getElementById('statusBar');
+  bar.className='status-bar'+(type==='ok'?' s-ok':type==='err'?' s-err':'');
 }
-function err(msg) {
-  const el = document.getElementById('errBox');
-  el.textContent = '✖ ' + msg; el.style.display = 'block';
-  status('err', 'Error — see above');
+function err(msg){
+  const el=document.getElementById('errBox');
+  el.textContent='✖ '+msg; el.style.display='block';
+  status('err','Something went awry — see above');
 }
-function warnMsg(msg) {
-  const el = document.getElementById('warnBox');
-  el.textContent = msg; el.style.display = 'block';
+function warnMsg(msg){
+  const el=document.getElementById('warnBox');
+  el.textContent=msg; el.style.display='block';
 }
-function clearMsg() {
-  document.getElementById('errBox').style.display  = 'none';
-  document.getElementById('warnBox').style.display = 'none';
+function clearMsg(){
+  document.getElementById('errBox').style.display='none';
+  document.getElementById('warnBox').style.display='none';
 }
 
-/* ── Drag & drop ────────────────────────────────────────────────────── */
-const zone = document.getElementById('uploadZone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-zone.addEventListener('drop', e => {
-  e.preventDefault(); zone.classList.remove('drag-over');
-  const f = e.dataTransfer.files[0];
-  if (f) {
-    const dt = new DataTransfer(); dt.items.add(f);
-    document.getElementById('csvFile').files = dt.files;
-    handleFile({ target:{ files:[f] } });
-  }
+const zone=document.getElementById('uploadZone');
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+zone.addEventListener('drop',e=>{
+  e.preventDefault();zone.classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];
+  if(f){const dt=new DataTransfer();dt.items.add(f);document.getElementById('csvFile').files=dt.files;handleFile({target:{files:[f]}});}
 });
 </script>
 </body>
