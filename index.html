@@ -30,7 +30,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--serif);min-height:
 
 .orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;animation:mist-drift ease-in-out infinite;}
 .orb1{width:600px;height:600px;background:rgba(155,158,200,0.04);top:-200px;left:-200px;animation-duration:30s;}
-.orb2{width:500px;height:500px;background:rgba(126,168,154,0.03);bottom:-100px;right:-150px;animation-duration:38s;animation-delay:-12s;}
+.orb2{width:680px;height:500px;background:rgba(126,168,154,0.03);bottom:-100px;right:-150px;animation-duration:38s;animation-delay:-12s;}
 .orb3{width:400px;height:400px;background:rgba(168,191,212,0.03);top:35%;left:55%;animation-duration:44s;animation-delay:-22s;}
 @keyframes mist-drift{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(25px,-35px) scale(1.04);}66%{transform:translate(-18px,22px) scale(0.97);}}
 
@@ -41,14 +41,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--serif);min-height:
 /* ── Layout — 3-column grid ── */
 .page-wrap{
   position:relative;z-index:1;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
   min-height:100vh;
 }
 .app{
-  width:100%;
-  max-width:420px;
+  width:680px;
+  max-width:90vw;
+  margin:0 auto;
   padding:16px 32px 36px;
 }
 
@@ -625,8 +623,9 @@ tr:hover td{background:rgba(155,158,200,0.03);}
     function drawMeteor(m){
       const t = m.life/m.maxLife;
       const alpha = t < 0.15 ? t/0.15 : t > 0.75 ? (1-t)/0.25 : 1;
-      const nx = m.vx/Math.hypot(m.vx,m.vy);
-      const ny = m.vy/Math.hypot(m.vx,m.vy);
+      const _spd = Math.hypot(m.vx,m.vy)||1;
+      const nx = m.vx/_spd;
+      const ny = m.vy/_spd;
       const tail = Math.min(m.len, m.life*m.vx === 0 ? m.len : m.len);
 
       // glow head
@@ -640,8 +639,7 @@ tr:hover td{background:rgba(155,158,200,0.03);}
         m.x - nx*tail, m.y - ny*tail
       );
       grd.addColorStop(0, m.color);
-      grd.addColorStop(0.3, m.color.replace('#','rgba(').replace(/(..)(..)(..)/, (_,r,g,b)=>{
-        return `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`})+'0.4)');
+      grd.addColorStop(0.3, 'rgba(200,200,220,0.4)');
       grd.addColorStop(1, 'rgba(0,0,0,0)');
 
       ctx.globalAlpha = alpha * 0.9;
@@ -667,7 +665,7 @@ tr:hover td{background:rgba(155,158,200,0.03);}
     function drawShooter(s){
       const t = s.life/s.maxLife;
       const alpha = t < 0.2 ? t/0.2 : t > 0.7 ? (1-t)/0.3 : 1;
-      const spd = Math.hypot(s.vx,s.vy);
+      const spd = Math.hypot(s.vx,s.vy)||1;
       const nx = s.vx/spd, ny = s.vy/spd;
       const tail = s.len*(0.3+t*0.7);
 
@@ -692,8 +690,8 @@ tr:hover td{background:rgba(155,158,200,0.03);}
     function drawFaller(f){
       const t = f.life/f.maxLife;
       const alpha = t < 0.2 ? t/0.2 : t > 0.7 ? (1-t)/0.3 : 1;
-      const spd = Math.hypot(f.vx,f.vy);
-      const nx = f.vx/spd||0, ny = f.vy/spd;
+      const spd = Math.hypot(f.vx,f.vy)||1;
+      const nx = f.vx/spd, ny = f.vy/spd;
       const tail = f.len*t;
 
       const grd = ctx.createLinearGradient(f.x,f.y, f.x-nx*tail, f.y-ny*tail);
@@ -1146,10 +1144,11 @@ zone.addEventListener('drop',e=>{
       const ang=Math.atan2(m.vy,m.vx);
       const tailX=m.x-Math.cos(ang)*m.len;
       const tailY=m.y-Math.sin(ang)*m.len;
+      const a1=+(m.alpha*m.life*0.35).toFixed(3), a2=+(m.alpha*m.life).toFixed(3);
       const grad=ctx.createLinearGradient(tailX,tailY,m.x,m.y);
       grad.addColorStop(0,'rgba(155,158,200,0)');
-      grad.addColorStop(0.6,`rgba(200,204,216,${m.alpha*m.life*0.35})`);
-      grad.addColorStop(1,`rgba(255,255,255,${m.alpha*m.life})`);
+      grad.addColorStop(0.6,`rgba(200,204,216,${a1})`);
+      grad.addColorStop(1,`rgba(255,255,255,${a2})`);
       ctx.save();
       ctx.globalAlpha=m.life;
       ctx.strokeStyle=grad;
