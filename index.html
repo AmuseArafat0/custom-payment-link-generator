@@ -42,12 +42,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--serif);min-height:
 .page-wrap{
   position:relative;z-index:1;
   display:grid;
-  grid-template-columns:1fr minmax(0,560px) 1fr;
+  grid-template-columns:1fr minmax(0,420px) 1fr;
   min-height:100vh;
 }
 .app{
   grid-column:2;
-  padding:44px 18px 80px;
+  padding:44px 32px 80px;
 }
 
 /* ── Side Star Panels ── */
@@ -887,13 +887,17 @@ const CC_DB=[
 ];
 
 function splitPhone(digits){
-  // Try each CC — longer ones come first in CC_DB so no ambiguity
+  // Try each CC (longer ones first) — accept local part of 7-12 digits
   for(const cc of CC_DB){
-    if(digits.startsWith(cc) && digits.length - cc.length === 10)
-      return {cc, local: digits.slice(cc.length)};
+    if(digits.startsWith(cc)){
+      const localLen = digits.length - cc.length;
+      if(localLen >= 7 && localLen <= 12)
+        return {cc, local: digits.slice(cc.length)};
+    }
   }
-  // Fallback: treat last 10 as local, default CC
-  return {cc: AUTO.defaultCC, local: digits.slice(-10)};
+  // Fallback: keep last digits as local with default CC
+  const local = digits.length >= 10 ? digits.slice(-10) : digits.slice(-9);
+  return {cc: AUTO.defaultCC, local};
 }
 
 function parsePhone(raw, overrideCC){
@@ -901,31 +905,24 @@ function parsePhone(raw, overrideCC){
   const s = String(raw).trim();
   if(!s || s.toLowerCase() === 'nan') return null;
 
-  // Strip everything except digits, but remember if there was a '+' at start
   const hadPlus = s.startsWith('+');
   const digits = s.replace(/\D/g, '');
-  if(digits.length < 10) return null;
+  if(digits.length < 7) return null;
 
-  if(overrideCC) return {cc: overrideCC, local: digits.slice(-10)};
+  if(overrideCC){
+    const local = digits.startsWith(overrideCC) ? digits.slice(overrideCC.length) : digits;
+    return {cc: overrideCC, local};
+  }
 
-  // Exactly 10 digits → treat as local number with default CC
-  if(digits.length === 10) return {cc: AUTO.defaultCC, local: digits};
+  // 7-10 digits, no plus → local number with default CC
+  if(!hadPlus && digits.length <= 10) return {cc: AUTO.defaultCC, local: digits};
 
-  // 11 digits starting with 0 → local trunk prefix, strip it
-  // e.g. 06388907291 → treat 6388907291 as local with default CC
-  if(digits.length === 11 && digits.startsWith('0'))
-    return {cc: AUTO.defaultCC, local: digits.slice(1)};
-
-  // Had a '+' prefix → number is international, parse with CC_DB
-  if(hadPlus) return splitPhone(digits);
-
-  // 12 digits starting with 0 → e.g. 091XXXXXXXXXX (0+CC+10)
-  if(digits.length === 12 && digits.startsWith('0'))
+  // Leading 0 trunk prefix → strip it and try CC match
+  if(digits.startsWith('0') && digits.length >= 8)
     return splitPhone(digits.slice(1));
 
-  // General: try CC_DB match
-  const result = splitPhone(digits);
-  return result;
+  // Always try CC_DB for anything else
+  return splitPhone(digits);
 }
 
 let rows=[],outRows=[];
@@ -1106,6 +1103,65 @@ zone.addEventListener('drop',e=>{
   const f=e.dataTransfer.files[0];
   if(f){const dt=new DataTransfer();dt.items.add(f);document.getElementById('csvFile').files=dt.files;handleFile({target:{files:[f]}});}
 });
+
+/* ── Meteors on main canvas (merged with existing stars/glints) ── */
+(function(){
+  const canvas=document.getElementById('canvas');
+  const ctx=canvas.getContext('2d');
+  const meteors=[];
+  const METEOR_MAX=8;
+
+  function spawnMeteor(){
+    if(meteors.length>=METEOR_MAX)return;
+    const angle=Math.PI/5+Math.random()*0.25;
+    const speed=Math.random()*5+4;
+    meteors.push({
+      x:Math.random()*window.innerWidth,
+      y:Math.random()*window.innerHeight*0.4-40,
+      vx:Math.cos(angle)*speed,
+      vy:Math.sin(angle)*speed,
+      len:Math.random()*110+50,
+      alpha:Math.random()*0.5+0.4,
+      width:Math.random()*1+0.5,
+      life:1,
+      decay:Math.random()*0.008+0.005,
+    });
+  }
+  setInterval(spawnMeteor, 800);
+
+  /* Hook into the existing rAF loop by patching clearRect */
+  const origClear = ctx.clearRect.bind(ctx);
+  ctx.clearRect = function(x,y,w,h){
+    origClear(x,y,w,h);
+    /* draw meteors after clear, before original draws */
+    const W=canvas.width, H=canvas.height;
+    for(let i=meteors.length-1;i>=0;i--){
+      const m=meteors[i];
+      m.x+=m.vx; m.y+=m.vy; m.life-=m.decay;
+      if(m.life<=0||m.x>W+200||m.y>H+200){meteors.splice(i,1);continue;}
+      const ang=Math.atan2(m.vy,m.vx);
+      const tailX=m.x-Math.cos(ang)*m.len;
+      const tailY=m.y-Math.sin(ang)*m.len;
+      const grad=ctx.createLinearGradient(tailX,tailY,m.x,m.y);
+      grad.addColorStop(0,'rgba(155,158,200,0)');
+      grad.addColorStop(0.6,`rgba(200,204,216,${m.alpha*m.life*0.35})`);
+      grad.addColorStop(1,`rgba(255,255,255,${m.alpha*m.life})`);
+      ctx.save();
+      ctx.globalAlpha=m.life;
+      ctx.strokeStyle=grad;
+      ctx.lineWidth=m.width;
+      ctx.lineCap='round';
+      ctx.shadowBlur=8;
+      ctx.shadowColor='rgba(168,191,212,0.5)';
+      ctx.beginPath();ctx.moveTo(tailX,tailY);ctx.lineTo(m.x,m.y);ctx.stroke();
+      ctx.globalAlpha=m.life*0.85;
+      ctx.fillStyle='rgba(255,255,255,0.9)';
+      ctx.shadowBlur=10;ctx.shadowColor='rgba(168,191,212,0.9)';
+      ctx.beginPath();ctx.arc(m.x,m.y,m.width*1.1,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+  };
+})();
 </script>
 </body>
 </html>
