@@ -34,10 +34,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--serif);min-height:
 .orb3{width:400px;height:400px;background:rgba(168,191,212,0.03);top:35%;left:55%;animation-duration:44s;animation-delay:-22s;}
 @keyframes mist-drift{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(25px,-35px) scale(1.04);}66%{transform:translate(-18px,22px) scale(0.97);}}
 
-
-  50%{transform:scale(1.15) rotate(180deg);opacity:0.8;}
-}
-
 /* ── Layout — 3-column grid ── */
 .page-wrap{
   position:relative;z-index:1;
@@ -72,8 +68,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--serif);min-height:
   pointer-events:none;animation:twinkle-rune ease-in-out infinite;
 }
 @media(max-width:1100px){
-  .page-wrap{grid-template-columns:0 minmax(0,780px) 0;}
-  .side-panel{align-self:start;display:none;}
+  .side-panel{display:none;}
 }
 
 /* ── Header ── */
@@ -842,7 +837,9 @@ tr:hover td{background:rgba(155,158,200,0.03);}
 
 /* ── Click rune particles ── */
 const RUNES=['✦','✧','◈','◇','⊕','⟡','⌘','◉'];
+let _particleCount=0;
 document.addEventListener('click',e=>{
+  if(_particleCount>40)return; // prevent DOM flood on rapid clicking
   for(let i=0;i<5;i++){
     const p=document.createElement('div');
     p.className='rune-particle';
@@ -850,7 +847,8 @@ document.addEventListener('click',e=>{
     const colors=['#c8ccd8','#9b9ec8','#7ea89a','#a8bfd4','#c9b97a'];
     p.style.cssText=`left:${e.clientX+(Math.random()-0.5)*50}px;top:${e.clientY+(Math.random()-0.5)*50}px;color:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${1.2+Math.random()*1.2}s;animation-delay:${Math.random()*0.25}s;font-size:${8+Math.random()*8}px;`;
     document.body.appendChild(p);
-    setTimeout(()=>p.remove(),2800);
+    _particleCount++;
+    setTimeout(()=>{p.remove();_particleCount--;},2800);
   }
 });
 
@@ -945,6 +943,7 @@ function parsePhone(raw, overrideCC){
 
   if(overrideCC){
     const local = digits.startsWith(overrideCC) ? digits.slice(overrideCC.length) : digits;
+    if(local.length < 4) return null;
     return {cc: overrideCC, local};
   }
 
@@ -969,9 +968,12 @@ function handleFile(e){
 }
 function csvLine(line){
   const res=[];let cur='',q=false;
-  for(const c of line){
-    if(c==='"')q=!q;
-    else if(c===','&&!q){res.push(cur.trim());cur='';}
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){
+      if(q&&line[i+1]==='"'){cur+='"';i++;}  // escaped quote inside field
+      else q=!q;
+    } else if(c===','&&!q){res.push(cur.trim());cur='';}
     else cur+=c;
   }
   res.push(cur.trim());return res;
@@ -1082,7 +1084,7 @@ function run(){
         sb.appendChild(tr);
       });
     }
-    if(w.length)warnMsg(w.join('\n'));
+    if(w.length)warnMsg(w.join('<br>'));
     const tbody=document.getElementById('tbody');
     tbody.innerHTML='';
     outRows.slice(0,5).forEach((r,i)=>{
@@ -1145,6 +1147,8 @@ function warnMsg(msg){
 function clearMsg(){
   document.getElementById('errBox').style.display='none';
   document.getElementById('warnBox').style.display='none';
+  document.getElementById('skippedWrap').style.display='none';
+  document.getElementById('dupsWrap').style.display='none';
 }
 
 const zone=document.getElementById('uploadZone');
