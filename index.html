@@ -38,18 +38,29 @@ body{background:var(--bg);color:var(--text);font-family:var(--serif);min-height:
   50%{transform:scale(1.15) rotate(180deg);opacity:0.8;}
 }
 
-/* ── Layout ── */
-.app{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:60px 28px 120px;}
+/* ── Layout — 3-column grid ── */
+.page-wrap{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:1fr minmax(0,560px) 1fr;
+  min-height:100vh;
+}
+.app{
+  grid-column:2;
+  padding:44px 18px 80px;
+}
 
 /* ── Side Star Panels ── */
 .side-panel{
-  position:fixed;top:0;bottom:0;
-  width:calc((100vw - 860px)/2);
-  min-width:0;z-index:1;pointer-events:none;overflow:hidden;
+  position:sticky;top:0;
+  height:100vh;
+  overflow:hidden;
+  pointer-events:none;
 }
-.side-panel.left{left:0;}
-.side-panel.right{right:0;}
-.side-panel canvas{position:absolute;inset:0;width:100%;height:100%;}
+.side-panel canvas{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+}
 @keyframes twinkle-rune{
   0%,100%{opacity:0;transform:scale(0.5) rotate(0deg);}
   50%{opacity:0.45;transform:scale(1) rotate(200deg);}
@@ -58,53 +69,56 @@ body{background:var(--bg);color:var(--text);font-family:var(--serif);min-height:
   position:absolute;font-family:'Space Mono',monospace;
   pointer-events:none;animation:twinkle-rune ease-in-out infinite;
 }
-@media(max-width:1080px){.side-panel{display:none;}}
+@media(max-width:1100px){
+  .page-wrap{grid-template-columns:0 minmax(0,780px) 0;}
+  .side-panel{display:none;}
+}
 
 /* ── Header ── */
-.header{margin-bottom:64px;text-align:center;}
+.header{margin-bottom:40px;text-align:center;}
 
-.rune-ring{width:88px;height:88px;margin:0 auto 24px;position:relative;animation:rune-spin 20s linear infinite;}
+.rune-ring{width:68px;height:68px;margin:0 auto 18px;position:relative;animation:rune-spin 20s linear infinite;}
 .rune-ring svg{width:100%;height:100%;}
 @keyframes rune-spin{to{transform:rotate(360deg);}}
-.inner-glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;animation:rune-spin 20s linear infinite reverse;filter:drop-shadow(0 0 12px rgba(155,158,200,0.6));}
+.inner-glyph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;animation:rune-spin 20s linear infinite reverse;filter:drop-shadow(0 0 12px rgba(155,158,200,0.6));}
 
-.header-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(155,158,200,0.2);color:var(--mist);font-family:var(--mono);font-size:9px;letter-spacing:3px;padding:5px 16px;border-radius:2px;margin-bottom:22px;text-transform:uppercase;background:rgba(155,158,200,0.04);}
+.header-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(155,158,200,0.2);color:var(--mist);font-family:var(--mono);font-size:8px;letter-spacing:3px;padding:4px 12px;border-radius:2px;margin-bottom:16px;text-transform:uppercase;background:rgba(155,158,200,0.04);}
 
-h1{font-family:var(--fell);font-size:52px;font-weight:400;line-height:1.1;margin-bottom:6px;font-style:italic;background:linear-gradient(160deg,#e8e6f0 0%,#c8ccd8 30%,#9b9ec8 60%,#7ea89a 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:300% 300%;animation:gradient-breathe 8s ease infinite;}
+h1{font-family:var(--fell);font-size:38px;font-weight:400;line-height:1.1;margin-bottom:6px;font-style:italic;background:linear-gradient(160deg,#e8e6f0 0%,#c8ccd8 30%,#9b9ec8 60%,#7ea89a 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:300% 300%;animation:gradient-breathe 8s ease infinite;}
 @keyframes gradient-breathe{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
 
-.subtitle{color:var(--mist);font-size:13px;line-height:2;font-family:var(--mono);letter-spacing:0.5px;}
+.subtitle{color:var(--mist);font-size:11px;line-height:1.9;font-family:var(--mono);letter-spacing:0.5px;}
 .subtitle em{color:var(--sage);font-style:normal;}
 
-.rune-divider{display:flex;align-items:center;gap:16px;margin:0 auto;max-width:300px;color:rgba(155,158,200,0.2);font-size:10px;letter-spacing:4px;font-family:var(--mono);}
+.rune-divider{display:flex;align-items:center;gap:12px;margin:0 auto;max-width:240px;color:rgba(155,158,200,0.2);font-size:9px;letter-spacing:4px;font-family:var(--mono);}
 .rune-divider::before,.rune-divider::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(155,158,200,0.15),transparent);}
 
 /* ── Steps ── */
-.steps{display:flex;flex-direction:column;gap:0;margin-top:48px;}
+.steps{display:flex;flex-direction:column;gap:0;margin-top:32px;}
 .step-wrap{position:relative;}
-.step-wrap+.step-wrap::before{content:'';display:block;width:1px;height:32px;background:linear-gradient(to bottom,rgba(155,158,200,0.15),transparent);margin:0 auto;}
+.step-wrap+.step-wrap::before{content:'';display:block;width:1px;height:22px;background:linear-gradient(to bottom,rgba(155,158,200,0.15),transparent);margin:0 auto;}
 
 /* ── Cards ── */
-.step{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:36px;transition:border-color 0.4s,box-shadow 0.4s;position:relative;overflow:hidden;}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:22px 24px;transition:border-color 0.4s,box-shadow 0.4s;position:relative;overflow:hidden;}
 .step::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,rgba(155,158,200,0.12),transparent);}
-.step:hover{border-color:rgba(155,158,200,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 40px rgba(155,158,200,0.04);}
-.step::before{content:'✦';position:absolute;top:14px;right:20px;color:rgba(155,158,200,0.08);font-size:18px;transition:color 0.3s;}
+.step:hover{border-color:rgba(155,158,200,0.2);box-shadow:0 16px 48px rgba(0,0,0,0.4),0 0 30px rgba(155,158,200,0.04);}
+.step::before{content:'✦';position:absolute;top:10px;right:14px;color:rgba(155,158,200,0.08);font-size:14px;transition:color 0.3s;}
 .step:hover::before{color:rgba(155,158,200,0.18);}
 
-.step-header{display:flex;align-items:center;gap:18px;margin-bottom:28px;}
-.step-badge{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex-shrink:0;border:1px solid rgba(155,158,200,0.2);border-radius:50%;font-family:var(--mono);font-size:11px;color:var(--lilac);background:rgba(155,158,200,0.05);}
-.step-title{font-family:var(--fell);font-size:18px;color:var(--silver);font-style:italic;}
-.step-desc{font-size:11px;color:var(--mist);margin-top:4px;font-family:var(--mono);letter-spacing:0.5px;}
+.step-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;border:1px solid rgba(155,158,200,0.2);border-radius:50%;font-family:var(--mono);font-size:10px;color:var(--lilac);background:rgba(155,158,200,0.05);}
+.step-title{font-family:var(--fell);font-size:16px;color:var(--silver);font-style:italic;}
+.step-desc{font-size:10px;color:var(--mist);margin-top:3px;font-family:var(--mono);letter-spacing:0.5px;}
 
 /* ── Upload ── */
-.upload-zone{border:1px dashed rgba(155,158,200,0.2);border-radius:4px;padding:44px 24px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;background:rgba(155,158,200,0.02);}
+.upload-zone{border:1px dashed rgba(155,158,200,0.2);border-radius:4px;padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;background:rgba(155,158,200,0.02);}
 .upload-zone:hover,.upload-zone.drag-over{border-color:rgba(155,158,200,0.35);background:rgba(155,158,200,0.05);box-shadow:0 0 40px rgba(155,158,200,0.05);}
 .upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.upload-icon{font-size:40px;margin-bottom:14px;display:block;animation:glyph-hover 4s ease-in-out infinite;filter:drop-shadow(0 0 16px rgba(155,158,200,0.3));}
-@keyframes glyph-hover{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-8px) rotate(2deg);}}
-.upload-main{font-family:var(--fell);font-size:17px;color:var(--silver);font-style:italic;margin-bottom:6px;}
-.upload-sub{font-size:10px;color:var(--mist);font-family:var(--mono);letter-spacing:1px;}
-.upload-ok{display:none;margin-top:18px;border:1px solid rgba(126,168,154,0.3);border-radius:3px;padding:10px 20px;color:var(--sage);font-family:var(--mono);font-size:11px;background:rgba(126,168,154,0.06);animation:fade-rise 0.4s ease;}
+.upload-icon{font-size:30px;margin-bottom:10px;display:block;animation:glyph-hover 4s ease-in-out infinite;filter:drop-shadow(0 0 16px rgba(155,158,200,0.3));}
+@keyframes glyph-hover{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-6px) rotate(2deg);}}
+.upload-main{font-family:var(--fell);font-size:15px;color:var(--silver);font-style:italic;margin-bottom:4px;}
+.upload-sub{font-size:9px;color:var(--mist);font-family:var(--mono);letter-spacing:1px;}
+.upload-ok{display:none;margin-top:14px;border:1px solid rgba(126,168,154,0.3);border-radius:3px;padding:8px 16px;color:var(--sage);font-family:var(--mono);font-size:10px;background:rgba(126,168,154,0.06);animation:fade-rise 0.4s ease;}
 @keyframes fade-rise{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
 
 /* ── Inputs ── */
@@ -213,15 +227,15 @@ tr:hover td{background:rgba(155,158,200,0.03);}
 <div class="orb orb2"></div>
 <div class="orb orb3"></div>
 
-<!-- ── Side Star Panels ── -->
-<div class="side-panel left" id="sideLeft">
-  <canvas id="canvasLeft"></canvas>
-</div>
-<div class="side-panel right" id="sideRight">
-  <canvas id="canvasRight"></canvas>
-</div>
+<div class="page-wrap">
 
-<div class="app">
+  <!-- Left star panel -->
+  <div class="side-panel" id="sideLeft">
+    <canvas id="canvasLeft"></canvas>
+  </div>
+
+  <!-- Center content -->
+  <div class="app">
 
   <!-- Header -->
   <div class="header">
@@ -423,7 +437,14 @@ tr:hover td{background:rgba(155,158,200,0.03);}
     <span class="footer-rune">✦ · ✦ · ✦</span>
     woven with ancient craft &nbsp;·&nbsp; be10x automation
   </div>
-</div>
+  </div><!-- end .app -->
+
+  <!-- Right star panel -->
+  <div class="side-panel" id="sideRight">
+    <canvas id="canvasRight"></canvas>
+  </div>
+
+</div><!-- end .page-wrap -->
 
 <script>
 /* ── Canvas starfield + glints ── */
@@ -469,139 +490,320 @@ tr:hover td{background:rgba(155,158,200,0.03);}
   window.addEventListener('resize',()=>{resize();init();});
 })();
 
-/* ── Side Panel Starfields ── */
+/* ── Side Panel Space Animation ── */
 (function(){
-  const COLORS=['#c8ccd8','#9b9ec8','#7ea89a','#a8bfd4','#c9b97a','#d4c9f0'];
-  const RUNE_CHARS=['✦','✧','◈','◇','⊕','⟡','✵','✶','✷','✸'];
+  const COLORS = ['#c8ccd8','#9b9ec8','#7ea89a','#a8bfd4','#c9b97a','#d4c9f0','#ffffff'];
+  const STAR_COLORS = ['#ffffff','#e8e8ff','#ffeedd','#ddeeff','#c8ccd8','#9b9ec8'];
 
-  function makeSidePanel(canvasId, panelId){
-    const panel=document.getElementById(panelId);
-    const c=document.getElementById(canvasId);
-    if(!panel||!c)return;
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function randEl(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
-    const ctx=c.getContext('2d');
-    let W,H,stars=[],glints=[],shooters=[],runes=[];
+  function initPanel(canvasId, panelId){
+    const panel = document.getElementById(panelId);
+    const c = document.getElementById(canvasId);
+    if(!panel||!c) return;
+    const ctx = c.getContext('2d');
+    let W=0, H=0;
+    let stars=[], twinklers=[], meteors=[], shooters=[], fallers=[], nebulas=[];
 
     function resize(){
-      W=c.width=panel.offsetWidth;
-      H=c.height=panel.offsetHeight;
-      if(W<10)return;
-      initAll();
+      W = c.width = panel.offsetWidth || panel.getBoundingClientRect().width || 160;
+      H = c.height = window.innerHeight;
+      if(W < 8) return;
+      build();
     }
 
-    function randColor(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
+    /* ── Background nebula blobs ── */
+    function buildNebulas(){
+      nebulas = Array.from({length:3}, ()=>({
+        x: rand(0,W), y: rand(0,H),
+        rx: rand(40,W*0.8), ry: rand(60,H*0.3),
+        color: randEl(['rgba(155,158,200,','rgba(126,168,154,','rgba(201,185,122,']),
+        a: rand(0.012, 0.03),
+        da: rand(0.00008, 0.0002) * (Math.random()<.5?1:-1),
+        aMin: 0.008, aMax: 0.04,
+      }));
+    }
 
-    function makeStar(){
-      return{
-        x:Math.random()*W, y:Math.random()*H,
-        r:Math.random()*1.4+0.2,
-        a:Math.random()*0.7, da:(Math.random()-0.5)*0.006,
-        color:randColor()
+    /* ── Static background stars (tiny, many) ── */
+    function buildStars(){
+      stars = Array.from({length:80}, ()=>({
+        x: rand(0,W), y: rand(0,H),
+        r: rand(0.15, 1.1),
+        a: rand(0.1, 0.7),
+        da: rand(0.001, 0.005) * (Math.random()<.5?1:-1),
+        color: randEl(STAR_COLORS),
+      }));
+    }
+
+    /* ── Larger twinkling sparkle-stars ── */
+    function buildTwinklers(){
+      twinklers = Array.from({length:12}, ()=>({
+        x: rand(0,W), y: rand(0,H),
+        size: rand(2, 6),
+        life: rand(0, 200),
+        maxLife: rand(120, 260),
+        color: randEl(COLORS),
+      }));
+    }
+
+    function build(){ buildNebulas(); buildStars(); buildTwinklers(); meteors=[]; shooters=[]; fallers=[]; }
+
+    /* ── Meteor (big, fast diagonal, bright glow) ── */
+    function spawnMeteor(){
+      const angle = rand(25,55) * Math.PI/180; // steep diagonal
+      const speed = rand(6, 13);
+      const fromLeft = Math.random() < 0.5;
+      return {
+        x: fromLeft ? rand(-20, W*0.3) : rand(W*0.7, W+20),
+        y: rand(-40, H*0.2),
+        vx: (fromLeft?1:-1) * Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        len: rand(80, 180),
+        width: rand(1.5, 3),
+        life: 0, maxLife: rand(40, 80),
+        color: randEl(['#ffffff','#d4c9f0','#a8bfd4','#c9b97a']),
+        trail: [],
       };
     }
-    function makeGlint(){
-      return{
-        x:Math.random()*W, y:Math.random()*H,
-        life:0, maxLife:70+Math.random()*90,
-        size:Math.random()*10+4, color:randColor()
+
+    /* ── Shooting star (medium, smooth arc) ── */
+    function spawnShooter(){
+      const angle = rand(15, 45) * Math.PI/180;
+      const speed = rand(3, 6);
+      return {
+        x: rand(0, W),
+        y: rand(-10, H*0.3),
+        vx: (Math.random()<.5?1:-1) * Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        len: rand(40, 100),
+        life: 0, maxLife: rand(60, 130),
+        color: randEl(STAR_COLORS),
+        alpha: 0,
       };
     }
-    function makeShooter(){
-      // starts from top edge or left edge, moves diagonally
-      const fromTop=Math.random()<0.6;
-      return{
-        x:fromTop?Math.random()*W:-5,
-        y:fromTop?-5:Math.random()*H*0.4,
-        vx: 0.8+Math.random()*1.4,
-        vy: 0.5+Math.random()*1.0,
-        len:30+Math.random()*50,
-        alpha:0, life:0,
-        maxLife:60+Math.random()*60,
-        color:randColor()
+
+    /* ── Falling star (slow, vertical-ish, fades in/out) ── */
+    function spawnFaller(){
+      return {
+        x: rand(0, W),
+        y: rand(-20, 0),
+        vx: rand(-0.4, 0.4),
+        vy: rand(1.2, 3.0),
+        r: rand(0.8, 2.2),
+        len: rand(20, 60),
+        life: 0, maxLife: rand(80, 180),
+        color: randEl(STAR_COLORS),
+        alpha: 0,
       };
     }
-    function makeRune(){
-      const el=document.createElement('div');
-      el.className='side-rune';
-      el.textContent=RUNE_CHARS[Math.floor(Math.random()*RUNE_CHARS.length)];
-      const size=8+Math.random()*8;
-      const dur=4+Math.random()*6;
-      const delay=Math.random()*-8;
-      const col=randColor();
-      el.style.cssText=`left:${Math.random()*85}%;top:${Math.random()*95}%;font-size:${size}px;color:${col};animation-duration:${dur}s;animation-delay:${delay}s;opacity:0;`;
-      panel.appendChild(el);
-      return el;
-    }
 
-    function initAll(){
-      stars=Array.from({length:55},makeStar);
-      glints=Array.from({length:5},makeGlint);
-      shooters=[];
-      // clear old rune elements
-      runes.forEach(r=>r.remove());
-      runes=Array.from({length:12},makeRune);
-    }
-
-    function drawCross(x,y,size,alpha,color){
-      ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;
-      ctx.lineWidth=0.6;ctx.shadowBlur=10;ctx.shadowColor=color;
+    /* ── Draw 4-point sparkle ── */
+    function drawSparkle(x,y,size,alpha,color){
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.8;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = color;
       ctx.beginPath();
-      ctx.moveTo(x-size,y);ctx.lineTo(x+size,y);
-      ctx.moveTo(x,y-size);ctx.lineTo(x,y+size);
-      ctx.stroke();ctx.restore();
+      ctx.moveTo(x-size,y); ctx.lineTo(x+size,y);
+      ctx.moveTo(x,y-size); ctx.lineTo(x,y+size);
+      // diagonals (smaller)
+      const d = size*0.55;
+      ctx.moveTo(x-d,y-d); ctx.lineTo(x+d,y+d);
+      ctx.moveTo(x+d,y-d); ctx.lineTo(x-d,y+d);
+      ctx.stroke();
+      ctx.restore();
     }
 
+    /* ── Draw meteor with glowing head + fading tail ── */
+    function drawMeteor(m){
+      const t = m.life/m.maxLife;
+      const alpha = t < 0.15 ? t/0.15 : t > 0.75 ? (1-t)/0.25 : 1;
+      const nx = m.vx/Math.hypot(m.vx,m.vy);
+      const ny = m.vy/Math.hypot(m.vx,m.vy);
+      const tail = Math.min(m.len, m.life*m.vx === 0 ? m.len : m.len);
+
+      // glow head
+      ctx.save();
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = m.color;
+
+      // gradient tail
+      const grd = ctx.createLinearGradient(
+        m.x, m.y,
+        m.x - nx*tail, m.y - ny*tail
+      );
+      grd.addColorStop(0, m.color);
+      grd.addColorStop(0.3, m.color.replace('#','rgba(').replace(/(..)(..)(..)/, (_,r,g,b)=>{
+        return `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`})+'0.4)');
+      grd.addColorStop(1, 'rgba(0,0,0,0)');
+
+      ctx.globalAlpha = alpha * 0.9;
+      ctx.strokeStyle = grd;
+      ctx.lineWidth = m.width;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y);
+      ctx.lineTo(m.x - nx*tail, m.y - ny*tail);
+      ctx.stroke();
+
+      // bright head dot
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.width*1.2, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    /* ── Draw shooting star ── */
+    function drawShooter(s){
+      const t = s.life/s.maxLife;
+      const alpha = t < 0.2 ? t/0.2 : t > 0.7 ? (1-t)/0.3 : 1;
+      const spd = Math.hypot(s.vx,s.vy);
+      const nx = s.vx/spd, ny = s.vy/spd;
+      const tail = s.len*(0.3+t*0.7);
+
+      const grd = ctx.createLinearGradient(s.x,s.y, s.x-nx*tail, s.y-ny*tail);
+      grd.addColorStop(0, s.color);
+      grd.addColorStop(1, 'rgba(0,0,0,0)');
+
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.75;
+      ctx.strokeStyle = grd;
+      ctx.lineWidth = 1.2;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = s.color;
+      ctx.beginPath();
+      ctx.moveTo(s.x,s.y);
+      ctx.lineTo(s.x-nx*tail, s.y-ny*tail);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    /* ── Draw falling star ── */
+    function drawFaller(f){
+      const t = f.life/f.maxLife;
+      const alpha = t < 0.2 ? t/0.2 : t > 0.7 ? (1-t)/0.3 : 1;
+      const spd = Math.hypot(f.vx,f.vy);
+      const nx = f.vx/spd||0, ny = f.vy/spd;
+      const tail = f.len*t;
+
+      const grd = ctx.createLinearGradient(f.x,f.y, f.x-nx*tail, f.y-ny*tail);
+      grd.addColorStop(0, f.color);
+      grd.addColorStop(1,'rgba(0,0,0,0)');
+
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.65;
+      ctx.strokeStyle = grd;
+      ctx.lineWidth = f.r;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = f.color;
+      ctx.beginPath();
+      ctx.moveTo(f.x,f.y);
+      ctx.lineTo(f.x-nx*tail, f.y-ny*tail);
+      ctx.stroke();
+
+      // head glow
+      ctx.globalAlpha = alpha * 0.9;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(f.x,f.y,f.r*0.8,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    let frame = 0;
     function draw(){
       ctx.clearRect(0,0,W,H);
+      frame++;
 
-      // stars
-      stars.forEach(s=>{
-        s.a+=s.da;
-        if(s.a<=0||s.a>=0.7)s.da*=-1;
-        ctx.globalAlpha=s.a;ctx.fillStyle=s.color;
-        ctx.shadowBlur=5;ctx.shadowColor=s.color;
-        ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
-      });
-      ctx.globalAlpha=1;ctx.shadowBlur=0;
-
-      // glints (cross sparkles)
-      glints.forEach((g,i)=>{
-        g.life++;
-        const t=g.life/g.maxLife;
-        const alpha=t<0.3?t/0.3*0.4:t>0.7?(1-t)/0.3*0.4:0.4;
-        drawCross(g.x,g.y,g.size*Math.sin(t*Math.PI),alpha,g.color);
-        if(g.life>=g.maxLife)glints[i]=makeGlint();
-      });
-
-      // shooting stars
-      if(Math.random()<0.004)shooters.push(makeShooter());
-      shooters=shooters.filter(s=>{
-        s.life++;s.x+=s.vx;s.y+=s.vy;
-        const t=s.life/s.maxLife;
-        s.alpha=t<0.2?t/0.2:t>0.7?(1-t)/0.3:1;
+      /* nebula blobs */
+      nebulas.forEach(n=>{
+        n.a += n.da;
+        if(n.a<n.aMin||n.a>n.aMax) n.da*=-1;
         ctx.save();
-        ctx.globalAlpha=s.alpha*0.6;
-        ctx.strokeStyle=s.color;ctx.lineWidth=1;
-        ctx.shadowBlur=12;ctx.shadowColor=s.color;
+        const grd = ctx.createRadialGradient(n.x,n.y,0, n.x,n.y, Math.max(n.rx,n.ry));
+        grd.addColorStop(0, n.color+n.a+')');
+        grd.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.scale(n.rx/Math.max(n.rx,n.ry), n.ry/Math.max(n.rx,n.ry));
         ctx.beginPath();
-        ctx.moveTo(s.x,s.y);
-        ctx.lineTo(s.x-s.vx/Math.hypot(s.vx,s.vy)*s.len,
-                   s.y-s.vy/Math.hypot(s.vx,s.vy)*s.len);
-        ctx.stroke();ctx.restore();
-        return s.life<s.maxLife&&s.x<W+20&&s.y<H+20;
+        ctx.arc(n.x*(Math.max(n.rx,n.ry)/n.rx), n.y*(Math.max(n.rx,n.ry)/n.ry), Math.max(n.rx,n.ry), 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      /* background stars */
+      stars.forEach(s=>{
+        s.a += s.da;
+        if(s.a<=0.05||s.a>=0.8) s.da*=-1;
+        ctx.globalAlpha = s.a;
+        ctx.fillStyle = s.color;
+        ctx.shadowBlur = 3;
+        ctx.shadowColor = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        ctx.fill();
+      });
+      ctx.globalAlpha=1; ctx.shadowBlur=0;
+
+      /* sparkle twinklers */
+      twinklers.forEach((tw,i)=>{
+        tw.life++;
+        if(tw.life >= tw.maxLife){
+          twinklers[i]={x:rand(0,W),y:rand(0,H),size:rand(2,6),life:0,maxLife:rand(120,260),color:randEl(COLORS)};
+          return;
+        }
+        const t = tw.life/tw.maxLife;
+        const a = Math.sin(t*Math.PI)*0.6;
+        const sz = tw.size * Math.sin(t*Math.PI);
+        drawSparkle(tw.x, tw.y, sz, a, tw.color);
+      });
+
+      /* meteors — spawn every ~4s */
+      if(frame % 240 === 0 || (meteors.length===0 && frame % 80 === 0)){
+        meteors.push(spawnMeteor());
+      }
+      meteors = meteors.filter(m=>{
+        m.life++; m.x+=m.vx; m.y+=m.vy;
+        drawMeteor(m);
+        return m.life < m.maxLife && m.y < H+50;
+      });
+
+      /* shooting stars — spawn every ~2.5s */
+      if(frame % 150 === 0){
+        shooters.push(spawnShooter());
+      }
+      shooters = shooters.filter(s=>{
+        s.life++; s.x+=s.vx; s.y+=s.vy;
+        drawShooter(s);
+        return s.life < s.maxLife && s.y < H+30 && s.x > -30 && s.x < W+30;
+      });
+
+      /* falling stars — spawn every ~1.5s */
+      if(frame % 90 === 0){
+        fallers.push(spawnFaller());
+      }
+      fallers = fallers.filter(f=>{
+        f.life++; f.x+=f.vx; f.y+=f.vy;
+        drawFaller(f);
+        return f.life < f.maxLife && f.y < H+30;
       });
 
       requestAnimationFrame(draw);
     }
 
     resize();
-    window.addEventListener('resize',resize);
+    window.addEventListener('resize', ()=>{ resize(); });
     draw();
   }
 
-  // Init both panels after DOM is ready
-  makeSidePanel('canvasLeft','sideLeft');
-  makeSidePanel('canvasRight','sideRight');
+  initPanel('canvasLeft','sideLeft');
+  initPanel('canvasRight','sideRight');
 })();
 
 /* ── Click rune particles ── */
