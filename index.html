@@ -471,13 +471,13 @@ tr:hover td{background:rgba(155,158,200,0.03);}
   let stars=[],glints=[];
   function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
   function init(){
-    stars=Array.from({length:140},()=>({
+    stars=Array.from({length:80},()=>({
       x:Math.random()*c.width, y:Math.random()*c.height,
       r:Math.random()*1.2+0.1, a:Math.random()*0.6,
       da:(Math.random()-0.5)*0.004,
       color:['#c8ccd8','#9b9ec8','#7ea89a','#a8bfd4','#c9b97a'][Math.floor(Math.random()*5)]
     }));
-    glints=Array.from({length:6},makeGlint);
+    glints=Array.from({length:4},makeGlint);
   }
   function makeGlint(){return{x:Math.random()*c.width,y:Math.random()*c.height,life:0,maxLife:90+Math.random()*80,size:Math.random()*12+6,color:['#c8ccd8','#9b9ec8','#a8bfd4'][Math.floor(Math.random()*3)]};}
   function drawCross(x,y,size,alpha,color){
@@ -570,7 +570,7 @@ tr:hover td{background:rgba(155,158,200,0.03);}
     /* ── Meteor (big, fast diagonal, bright glow) ── */
     function spawnMeteor(){
       const angle = rand(25,55) * Math.PI/180; // steep diagonal
-      const speed = rand(3.5, 7);
+      const speed = rand(1.5, 3);
       const fromLeft = Math.random() < 0.5;
       return {
         x: fromLeft ? rand(-20, W*0.3) : rand(W*0.7, W+20),
@@ -588,7 +588,7 @@ tr:hover td{background:rgba(155,158,200,0.03);}
     /* ── Shooting star (medium, smooth arc) ── */
     function spawnShooter(){
       const angle = rand(15, 45) * Math.PI/180;
-      const speed = rand(1.0, 1.8);
+      const speed = rand(0.8, 1.5);
       return {
         x: rand(0, W),
         y: rand(-10, H*0.3),
@@ -606,8 +606,8 @@ tr:hover td{background:rgba(155,158,200,0.03);}
       return {
         x: rand(0, W),
         y: rand(-20, 0),
-        vx: rand(-0.2, 0.2),
-        vy: rand(0.25, 0.55),
+        vx: rand(-0.15, 0.15),
+        vy: rand(0.2, 0.5),
         r: rand(0.8, 2.2),
         len: rand(20, 60),
         life: 0, maxLife: rand(80, 180),
@@ -792,8 +792,8 @@ tr:hover td{background:rgba(155,158,200,0.03);}
         return m.life < m.maxLife && m.y < H+50;
       });
 
-      /* shooting stars — spawn every ~4s */
-      if(frame % 240 === 0){
+      /* shooting stars — spawn every ~8s */
+      if(frame % 480 === 0){
         shooters.push(spawnShooter());
       }
       shooters = shooters.filter(s=>{
@@ -802,8 +802,8 @@ tr:hover td{background:rgba(155,158,200,0.03);}
         return s.life < s.maxLife && s.y < H+30 && s.x > -30 && s.x < W+30;
       });
 
-      /* falling stars — spawn every ~1.5s */
-      if(frame % 210 === 0){
+      /* falling stars — spawn every ~6s */
+      if(frame % 360 === 0){
         fallers.push(spawnFaller());
       }
       fallers = fallers.filter(f=>{
@@ -1138,7 +1138,7 @@ zone.addEventListener('drop',e=>{
   const canvas=document.getElementById('canvas');
   const ctx=canvas.getContext('2d');
   const meteors=[];
-  const METEOR_MAX=6;
+  const METEOR_MAX=4;
 
   function spawnMeteor(){
     if(meteors.length>=METEOR_MAX)return;
