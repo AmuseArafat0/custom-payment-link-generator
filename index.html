@@ -921,7 +921,8 @@ const CC_DB=[
 ];
 
 function splitPhone(digits){
-  // Try each CC (longer ones first) — accept local part of 7-12 digits
+  // Try each CC (longer ones first) — accept local part of exactly 10 digits (Indian standard)
+  // Fallback: accept 7-12 digits for international numbers
   for(const cc of CC_DB){
     if(digits.startsWith(cc)){
       const localLen = digits.length - cc.length;
@@ -929,34 +930,48 @@ function splitPhone(digits){
         return {cc, local: digits.slice(cc.length)};
     }
   }
-  // Fallback: keep last digits as local with default CC
-  const local = digits.length >= 10 ? digits.slice(-10) : digits.slice(-9);
+  // Fallback: keep last 10 digits as local with default CC
+  const local = digits.length >= 10 ? digits.slice(-10) : digits;
   return {cc: AUTO.defaultCC, local};
 }
 
 function parsePhone(raw, overrideCC){
   if(!raw) return null;
-  const s = String(raw).trim();
+  // Strip leading quote characters (e.g. '+91... stored as '+91...)
+  const s = String(raw).trim().replace(/^'+/, '');
   if(!s || s.toLowerCase() === 'nan') return null;
 
   const hadPlus = s.startsWith('+');
+  // Strip all non-digit characters (spaces, dashes, dots, parens)
   const digits = s.replace(/\D/g, '');
   if(digits.length < 7) return null;
 
+  // ── MANUAL OVERRIDE MODE ──
+  // In manual mode, trust the user-supplied CC completely.
+  // Rule: only strip the CC prefix if the number is LONGER than 10 digits
+  // (i.e. it looks like CC + 10-digit local = 12+ digits).
+  // A plain 10-digit number must NEVER be trimmed, even if it starts with the CC digits.
   if(overrideCC){
-    const local = digits.startsWith(overrideCC) ? digits.slice(overrideCC.length) : digits;
-    if(local.length < 4) return null;
+    const afterCC = digits.startsWith(overrideCC) ? digits.slice(overrideCC.length) : null;
+    // Strip CC only when result is exactly 10 digits (unambiguous international format)
+    const local = (afterCC && afterCC.length === 10) ? afterCC : digits;
+    if(local.length < 7) return null;
     return {cc: overrideCC, local};
   }
 
-  // 7-10 digits, no plus → local number with default CC
-  if(!hadPlus && digits.length <= 10) return {cc: AUTO.defaultCC, local: digits};
+  // ── AUTO-DETECT MODE ──
 
-  // Leading 0 trunk prefix → strip it and try CC match
+  // Explicit + prefix → always run CC_DB detection
+  if(hadPlus) return splitPhone(digits);
+
+  // 7-10 digits, no plus → plain local number, use default CC as-is
+  if(digits.length <= 10) return {cc: AUTO.defaultCC, local: digits};
+
+  // Leading 0 trunk prefix (e.g. 09916081691 → strip 0 → 9916081691)
   if(digits.startsWith('0') && digits.length >= 8)
     return splitPhone(digits.slice(1));
 
-  // Always try CC_DB for anything else
+  // 11+ digits without plus → try CC_DB
   return splitPhone(digits);
 }
 
