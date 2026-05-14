@@ -328,7 +328,7 @@ tr:hover td{background:rgba(155,158,200,0.03);}
         </div>
       </div>
       <div class="auto-pills">
-        <div class="pill"><span class="pill-key">CountryCode</span><span class="pill-val">auto-detected</span></div>
+        <div class="pill"><span class="pill-key">CountryCode</span><span class="pill-val">+91 fixed</span></div>
         <div class="pill"><span class="pill-key">Phone</span><span class="pill-val">last 10 digits</span></div>
         <div class="pill"><span class="pill-key">AllowBroadcast</span><span class="pill-val">True</span></div>
         <div class="pill"><span class="pill-key">AllowSMS</span><span class="pill-val">True</span></div>
@@ -338,27 +338,30 @@ tr:hover td{background:rgba(155,158,200,0.03);}
       </div>
       <div class="cc-toggle-row">
         <span class="cc-toggle-label">⊕ Country Code</span>
-        <div class="toggle-group">
-          <button class="toggle-btn active" id="btnAuto"   onclick="setCCMode('auto')">Auto Detect</button>
-          <button class="toggle-btn"        id="btnManual" onclick="setCCMode('manual')">Manual Override</button>
-        </div>
-        <div class="cc-input-wrap" id="ccInputWrap">
-          <span class="cc-prefix">+</span>
-          <input type="number" class="cc-input" id="manualCC" value="91" min="1" max="9999" placeholder="91">
-          <span class="cc-note">applied to all rows ✦</span>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(126,168,154,0.08);border:1px solid rgba(126,168,154,0.3);border-radius:3px;padding:7px 18px;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--sage);">
+          +91 &nbsp;<span style="color:var(--mist);font-size:12px;font-weight:600;">fixed for all rows</span>
         </div>
       </div>
 
       <!-- Priority first row -->
       <div id="priorityBox" style="margin-top:16px;border:1px solid rgba(201,185,122,0.18);border-radius:3px;padding:14px 18px;background:rgba(201,185,122,0.03);">
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;">★ Priority Row — always inserted as Row #1 in output</div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <input type="text" id="priorityPhone" placeholder="e.g. 9876543210 or +919876543210"
-            style="flex:1;min-width:220px;background:var(--surface);border:1px solid rgba(201,185,122,0.25);border-radius:3px;padding:9px 13px;color:var(--gold);font-family:var(--mono);font-size:12px;outline:none;transition:border-color 0.3s;"
-            oninput="previewPriority(this.value)">
+        <div style="font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:1px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;">★ Priority Row — always inserted as Row #1 in output</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--mist);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Phone Number</div>
+            <input type="text" id="priorityPhone" placeholder="e.g. 9876543210"
+              style="width:100%;background:var(--surface);border:1px solid rgba(201,185,122,0.25);border-radius:3px;padding:10px 13px;color:var(--gold);font-family:var(--mono);font-size:14px;font-weight:700;outline:none;transition:border-color 0.3s;"
+              oninput="previewPriority()">
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--mist);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Email Address</div>
+            <input type="email" id="priorityEmail" placeholder="e.g. name@example.com"
+              style="width:100%;background:var(--surface);border:1px solid rgba(201,185,122,0.25);border-radius:3px;padding:10px 13px;color:var(--gold);font-family:var(--mono);font-size:14px;font-weight:700;outline:none;transition:border-color 0.3s;"
+              oninput="previewPriority()">
+          </div>
         </div>
-        <div id="priorityPreview" style="margin-top:10px;font-family:var(--mono);font-size:11px;display:none;line-height:2;"></div>
-        <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--mist);letter-spacing:0.5px;">Leave blank to skip · Name and email will be empty · parsed with the same CC logic above</div>
+        <div id="priorityPreview" style="margin-top:12px;font-family:var(--mono);font-size:13px;font-weight:600;display:none;line-height:2;"></div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--mist);">Leave both blank to skip · CC is fixed at +91</div>
       </div>
 
       <!-- Phone tester -->
@@ -873,31 +876,31 @@ const AUTO={
   defaultCC:'91',
 };
 
-let ccMode='auto';
-function setCCMode(mode){
-  ccMode=mode;
-  document.getElementById('btnAuto').classList.toggle('active',mode==='auto');
-  document.getElementById('btnManual').classList.toggle('active',mode==='manual');
-  document.getElementById('ccInputWrap').classList.toggle('show',mode==='manual');
-}
-function getManualCC(){
-  const v=parseInt(document.getElementById('manualCC').value);
-  return isNaN(v)||v<1?'91':String(v);
-}
-function previewPriority(raw){
+// CC is fixed at 91 for all rows
+const FIXED_CC = '91';
+function previewPriority(){
+  const raw=document.getElementById('priorityPhone').value.trim();
+  const email=document.getElementById('priorityEmail').value.trim();
   const el=document.getElementById("priorityPreview");
-  if(!raw.trim()){el.style.display="none";return;}
-  const overrideCC=ccMode==="manual"?getManualCC():null;
-  const result=parsePhone(raw,overrideCC);
+  if(!raw && !email){el.style.display="none";return;}
+  const result=raw?parsePhone(raw,FIXED_CC):null;
   el.style.display="block";
-  if(!result){el.innerHTML=`<span style="color:#c89090">✗ Cannot parse 2014 this number will be skipped</span>`;return;}
-  el.innerHTML=`<span style="color:var(--mist)">Will appear as:</span> &nbsp;&nbsp;<span style="color:var(--gold);font-weight:700">CC=${result.cc}</span> &nbsp;00b7&nbsp;<span style="color:var(--gold);font-weight:700">Phone=${result.local}</span> &nbsp;00b7&nbsp;<span style="color:var(--mist)">Full: +${result.cc}${result.local}</span>`;
+  if(raw && !result){
+    el.innerHTML=`<span style="color:#c89090">✖ Phone cannot be parsed — this row will be skipped</span>`;
+    return;
+  }
+  const phonePart = result
+    ? `<span style="color:var(--mist)">CC:</span> <span style="color:var(--gold);font-weight:700">+${result.cc}</span> &nbsp;·&nbsp; <span style="color:var(--mist)">Phone:</span> <span style="color:var(--gold);font-weight:700">${result.local}</span>`
+    : `<span style="color:var(--mist);font-style:italic">no phone</span>`;
+  const emailPart = email
+    ? `<span style="color:var(--mist)">Email:</span> <span style="color:var(--sage);font-weight:700">${email}</span>`
+    : `<span style="color:var(--mist);font-style:italic">no email</span>`;
+  el.innerHTML = phonePart + ' &nbsp;·&nbsp; ' + emailPart;
 }
 function testPhoneNum(raw){
   const el=document.getElementById('testPhoneResult');
   if(!raw.trim()){el.style.display='none';return;}
-  const overrideCC=ccMode==='manual'?getManualCC():null;
-  const result=parsePhone(raw,overrideCC);
+  const result=parsePhone(raw,FIXED_CC);
   el.style.display='block';
   if(!result){
     el.innerHTML=`<span style="color:#c89090">✖ Cannot parse — too short or invalid</span>`;
@@ -980,20 +983,11 @@ function parsePhone(raw, overrideCC){
     return {cc: overrideCC, local};
   }
 
-  // ── AUTO-DETECT MODE ──
-
-  // Explicit + prefix → always run CC_DB detection
-  if(hadPlus) return splitPhone(digits);
-
-  // 7-10 digits, no plus → plain local number, use default CC as-is
-  if(digits.length <= 10) return {cc: AUTO.defaultCC, local: digits};
-
-  // Leading 0 trunk prefix (e.g. 09916081691 → strip 0 → 9916081691)
-  if(digits.startsWith('0') && digits.length >= 8)
-    return splitPhone(digits.slice(1));
-
-  // 11+ digits without plus → try CC_DB
-  return splitPhone(digits);
+  // Since CC is always 91, treat all numbers as Indian local numbers.
+  // Strip leading 0 (trunk prefix) or leading '91' from long numbers, keep the rest.
+  if(digits.startsWith('0') && digits.length >= 8) return {cc: FIXED_CC, local: digits.slice(1)};
+  if(digits.startsWith('91') && digits.length === 12) return {cc: FIXED_CC, local: digits.slice(2)};
+  return {cc: FIXED_CC, local: digits};
 }
 
 let rows=[],outRows=[];
@@ -1053,26 +1047,27 @@ function parseCSV(text,fname){
 function buildOutput(){
   const mainLink=document.getElementById('mainLink').value.trim();
   const altLink=document.getElementById('altLink').value.trim();
-  const overrideCC=ccMode==='manual'?getManualCC():null;
   let noPhone=0,total=0;
   const seen=new Set(),dups=[],skipped=[];
   outRows=[];
 
   // ── Priority first row ──
   const priorityRaw=document.getElementById('priorityPhone').value.trim();
-  if(priorityRaw){
-    const pp=parsePhone(priorityRaw,overrideCC);
-    if(pp){
-      const pKey=pp.cc+pp.local;
-      seen.add(pKey);
-      const ccNum=Number(pp.cc);
+  const priorityEmail=document.getElementById('priorityEmail').value.trim();
+  if(priorityRaw || priorityEmail){
+    const pp=priorityRaw?parsePhone(priorityRaw,FIXED_CC):null;
+    if(!priorityRaw || pp){
+      const pPhone = pp ? pp.local : '';
+      const pCC    = pp ? pp.cc   : FIXED_CC;
+      const pKey   = pCC + pPhone;
+      if(pPhone) seen.add(pKey);
       outRows.push({
-        CountryCode: isNaN(ccNum)?91:ccNum,
-        Phone:       pp.local,
+        CountryCode: 91,
+        Phone:       pPhone,
         AllowBroadcast:AUTO.AllowBroadcast,
         AllowSMS:    AUTO.AllowSMS,
-        price:       buildLink(mainLink,'',pp.local,pp.cc,''),
-        alter:       buildLink(altLink, '',pp.local,pp.cc,''),
+        price:       buildLink(mainLink,priorityEmail,pPhone,pCC,''),
+        alter:       buildLink(altLink, priorityEmail,pPhone,pCC,''),
         msg:         AUTO.msg,
         _name:       '★ Priority',
       });
@@ -1081,14 +1076,13 @@ function buildOutput(){
 
   for(const r of rows){
     total++;
-    const p=parsePhone(r.phoneRaw,overrideCC);
+    const p=parsePhone(r.phoneRaw,FIXED_CC);
     if(!p){noPhone++;skipped.push({name:r.fullName,phone:r.phoneRaw,email:r.email});continue;}
     const key=p.cc+p.local;
     if(seen.has(key)){dups.push({name:r.fullName,phone:`+${p.cc}${p.local}`,email:r.email});continue;}
     seen.add(key);
-    const ccNum=Number(p.cc);
     outRows.push({
-      CountryCode: isNaN(ccNum)?91:ccNum,
+      CountryCode: 91,
       Phone:       p.local,
       AllowBroadcast:AUTO.AllowBroadcast,
       AllowSMS:    AUTO.AllowSMS,
