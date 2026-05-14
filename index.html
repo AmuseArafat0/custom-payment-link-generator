@@ -346,7 +346,13 @@ tr:hover td{background:rgba(155,158,200,0.03);}
       <!-- Priority first row -->
       <div id="priorityBox" style="margin-top:16px;border:1px solid rgba(201,185,122,0.18);border-radius:3px;padding:14px 18px;background:rgba(201,185,122,0.03);">
         <div style="font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:1px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;">★ Priority Row — always inserted as Row #1 in output</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex-wrap:wrap;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--mist);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Full Name</div>
+            <input type="text" id="priorityName" placeholder="e.g. Rahul Sharma"
+              style="width:100%;background:var(--surface);border:1px solid rgba(201,185,122,0.25);border-radius:3px;padding:10px 13px;color:var(--gold);font-family:var(--mono);font-size:14px;font-weight:700;outline:none;transition:border-color 0.3s;"
+              oninput="previewPriority()">
+          </div>
           <div>
             <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--mist);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Phone Number</div>
             <input type="text" id="priorityPhone" placeholder="e.g. 9876543210"
@@ -361,7 +367,7 @@ tr:hover td{background:rgba(155,158,200,0.03);}
           </div>
         </div>
         <div id="priorityPreview" style="margin-top:12px;font-family:var(--mono);font-size:13px;font-weight:600;display:none;line-height:2;"></div>
-        <div style="margin-top:8px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--mist);">Leave both blank to skip · CC is fixed at +91</div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--mist);">Leave all blank to skip · CC is fixed at +91 · Name goes into the payment link</div>
       </div>
 
       <!-- Phone tester -->
@@ -881,21 +887,25 @@ const FIXED_CC = '91';
 function previewPriority(){
   const raw=document.getElementById('priorityPhone').value.trim();
   const email=document.getElementById('priorityEmail').value.trim();
+  const name=document.getElementById('priorityName').value.trim();
   const el=document.getElementById("priorityPreview");
-  if(!raw && !email){el.style.display="none";return;}
+  if(!raw && !email && !name){el.style.display="none";return;}
   const result=raw?parsePhone(raw,FIXED_CC):null;
   el.style.display="block";
   if(raw && !result){
     el.innerHTML=`<span style="color:#c89090">✖ Phone cannot be parsed — this row will be skipped</span>`;
     return;
   }
+  const namePart = name
+    ? `<span style="color:var(--mist)">Name:</span> <span style="color:var(--gold);font-weight:700">${name}</span>`
+    : `<span style="color:var(--mist);font-style:italic">no name</span>`;
   const phonePart = result
     ? `<span style="color:var(--mist)">CC:</span> <span style="color:var(--gold);font-weight:700">+${result.cc}</span> &nbsp;·&nbsp; <span style="color:var(--mist)">Phone:</span> <span style="color:var(--gold);font-weight:700">${result.local}</span>`
     : `<span style="color:var(--mist);font-style:italic">no phone</span>`;
   const emailPart = email
     ? `<span style="color:var(--mist)">Email:</span> <span style="color:var(--sage);font-weight:700">${email}</span>`
     : `<span style="color:var(--mist);font-style:italic">no email</span>`;
-  el.innerHTML = phonePart + ' &nbsp;·&nbsp; ' + emailPart;
+  el.innerHTML = namePart + ' &nbsp;·&nbsp; ' + phonePart + ' &nbsp;·&nbsp; ' + emailPart;
 }
 function testPhoneNum(raw){
   const el=document.getElementById('testPhoneResult');
@@ -1054,7 +1064,8 @@ function buildOutput(){
   // ── Priority first row ──
   const priorityRaw=document.getElementById('priorityPhone').value.trim();
   const priorityEmail=document.getElementById('priorityEmail').value.trim();
-  if(priorityRaw || priorityEmail){
+  const priorityName=document.getElementById('priorityName').value.trim();
+  if(priorityRaw || priorityEmail || priorityName){
     const pp=priorityRaw?parsePhone(priorityRaw,FIXED_CC):null;
     if(!priorityRaw || pp){
       const pPhone = pp ? pp.local : '';
@@ -1066,10 +1077,10 @@ function buildOutput(){
         Phone:       pPhone,
         AllowBroadcast:AUTO.AllowBroadcast,
         AllowSMS:    AUTO.AllowSMS,
-        price:       buildLink(mainLink,priorityEmail,pPhone,pCC,''),
-        alter:       buildLink(altLink, priorityEmail,pPhone,pCC,''),
+        price:       buildLink(mainLink,priorityEmail,pPhone,pCC,priorityName),
+        alter:       buildLink(altLink, priorityEmail,pPhone,pCC,priorityName),
         msg:         AUTO.msg,
-        _name:       '★ Priority',
+        _name:       '★ ' + (priorityName || 'Priority'),
       });
     }
   }
