@@ -123,7 +123,7 @@ h1{font-family:var(--fell);font-size:48px;font-weight:800;font-weight:400;line-h
 label{display:block;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mist);margin-bottom:10px;font-family:var(--mono);}
 .input-wrap{position:relative;}
 .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;opacity:0.6;}
-input[type="url"]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:13px 14px 13px 42px;color:var(--silver);font-family:var(--mono);font-size:14px;font-weight:700;outline:none;transition:border-color 0.3s,box-shadow 0.3s;}
+input[type="url"],input[type="text"].link-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:13px 14px 13px 42px;color:var(--silver);font-family:var(--mono);font-size:14px;font-weight:700;outline:none;transition:border-color 0.3s,box-shadow 0.3s;}
 input[type="url"]:focus{border-color:rgba(155,158,200,0.35);box-shadow:0 0 0 3px rgba(155,158,200,0.06),0 0 20px rgba(155,158,200,0.04);}
 input::placeholder{color:#2a2e3a;}
 .link-pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
@@ -303,14 +303,14 @@ tr:hover td{background:rgba(155,158,200,0.03);}
           <label>Primary Payment Seal</label>
           <div class="input-wrap">
             <span class="input-icon">◈</span>
-            <input type="url" id="mainLink" placeholder="https://pay.be10x.in/checkout/...">
+            <input type="text" id="mainLink" class="link-input" placeholder="https://pay.be10x.in/checkout/...">
           </div>
         </div>
         <div class="field-group">
           <label>Alternate Payment Seal</label>
           <div class="input-wrap">
             <span class="input-icon">◇</span>
-            <input type="url" id="altLink" placeholder="https://pay.be10x.in/checkout/...">
+            <input type="text" id="altLink" class="link-input" placeholder="https://pay.be10x.in/checkout/...">
           </div>
         </div>
       </div>
@@ -1174,7 +1174,10 @@ function run(){
 
 /* ── Download — Name column empty, NO formlink column ── */
 function download(){
-  if(!outRows.length){err('No output rows to download — please reveal output first.');return;}
+  if(!rows.length){err('No output rows to download — please upload a CSV first.');return;}
+  // Always rebuild output fresh so any link changes since last preview are captured
+  buildOutput();
+  if(!outRows.length){err('No valid rows to download after processing.');return;}
   // Columns: Name (empty), CountryCode, Phone, AllowBroadcast, AllowSMS, price, alter, msg
   const cols=['CountryCode','Phone','AllowBroadcast','AllowSMS','price','alter','msg'];
   const lines=[['Name',...cols].join(',')];
