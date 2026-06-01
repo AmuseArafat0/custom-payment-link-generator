@@ -1173,28 +1173,72 @@ function run(){
 }
 
 /* ── Download — Name column empty, NO formlink column ── */
+/* Splits into multiple files if total CSV exceeds 2 MB */
+const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB
+
 function download(){
   if(!rows.length){err('No output rows to download — please upload a CSV first.');return;}
   // Always rebuild output fresh so any link changes since last preview are captured
   buildOutput();
   if(!outRows.length){err('No valid rows to download after processing.');return;}
+
   // Columns: Name (empty), CountryCode, Phone, AllowBroadcast, AllowSMS, price, alter, msg
   const cols=['CountryCode','Phone','AllowBroadcast','AllowSMS','price','alter','msg'];
-  const lines=[['Name',...cols].join(',')];
+  const header=['Name',...cols].join(',');
+
+  // Build all data rows first
+  const dataLines=[];
   outRows.forEach(r=>{
     const v=cols.map(c=>{
       let s=String(r[c]!==undefined?r[c]:'');
       if(s.includes(',')||s.includes('"')||s.includes('\n'))s='"'+s.replace(/"/g,'""')+'"';
       return s;
     });
-    lines.push(['',...v].join(','));
+    dataLines.push(['',...v].join(','));
   });
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'}));
-  a.download='Output_PaymentLinks.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  status('ok',`✦ Scroll delivered — ${outRows.length} rows enchanted`);
+
+  // Split into chunks that each stay under MAX_FILE_BYTES
+  const encoder=new TextEncoder();
+  const headerBytes=encoder.encode(header+'\n').length;
+
+  const chunks=[];
+  let currentChunk=[];
+  let currentSize=headerBytes;
+
+  for(const line of dataLines){
+    const lineBytes=encoder.encode(line+'\n').length;
+    // If adding this line would exceed the limit AND we already have rows, start a new chunk
+    if(currentSize+lineBytes>MAX_FILE_BYTES && currentChunk.length>0){
+      chunks.push(currentChunk);
+      currentChunk=[];
+      currentSize=headerBytes;
+    }
+    currentChunk.push(line);
+    currentSize+=lineBytes;
+  }
+  if(currentChunk.length>0) chunks.push(currentChunk);
+
+  // Trigger download for each chunk with a small delay between them
+  const total=chunks.length;
+  chunks.forEach((chunk,idx)=>{
+    setTimeout(()=>{
+      const content=[header,...chunk].join('\n');
+      const blob=new Blob([content],{type:'text/csv;charset=utf-8;'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=total===1
+        ? 'Output_PaymentLinks.csv'
+        : `Output_PaymentLinks_Part${idx+1}of${total}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, idx * 400); // stagger downloads so the browser handles them cleanly
+  });
+
+  const msg=total===1
+    ? `✦ Scroll delivered — ${outRows.length} rows enchanted`
+    : `✦ Scroll too vast — split into ${total} files · ${outRows.length} rows enchanted`;
+  status('ok', msg);
 }
 
 function status(type,text){
