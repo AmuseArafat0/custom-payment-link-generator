@@ -1174,7 +1174,11 @@ function run(){
 
 /* ── Download — Name column empty, NO formlink column ── */
 /* Splits into multiple files if total CSV exceeds 2 MB */
-const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB
+/* Use the strict decimal definition (1 MB = 1,000,000 bytes) with a safety
+   buffer, since upload targets typically enforce 2,000,000 bytes, not the
+   binary 2,097,152 (2*1024*1024). Buffer also covers the last line that
+   gets added to a chunk before the size check fires. */
+const MAX_FILE_BYTES = 1900000; // safely under 2,000,000 bytes (2 MB)
 
 function download(){
   if(!rows.length){err('No output rows to download — please upload a CSV first.');return;}
@@ -1215,6 +1219,12 @@ function download(){
     }
     currentChunk.push(line);
     currentSize+=lineBytes;
+    // Safety: if this single line pushed us over the limit, close the chunk now
+    if(currentSize>MAX_FILE_BYTES){
+      chunks.push(currentChunk);
+      currentChunk=[];
+      currentSize=headerBytes;
+    }
   }
   if(currentChunk.length>0) chunks.push(currentChunk);
 
