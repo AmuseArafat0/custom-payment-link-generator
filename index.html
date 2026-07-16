@@ -389,16 +389,6 @@ html.hz-paused .dot.working{
         <div style="margin-top:8px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--mist);">Leave all blank to skip · CC is fixed at +91 · Name goes into the payment link</div>
       </div>
 
-      <!-- Phone tester -->
-      <div style="margin-top:16px;border:1px solid rgba(155,158,200,0.12);border-radius:3px;padding:14px 18px;background:rgba(155,158,200,0.02);">
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--mist);text-transform:uppercase;margin-bottom:10px;">⟡ Phone Number Tester — paste any number to preview how it will be parsed</div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <input type="text" id="testPhone" placeholder="e.g. 06388907291 or +918777595927 or 9323590592"
-            style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:9px 13px;color:var(--silver);font-family:var(--mono);font-size:12px;outline:none;transition:border-color 0.3s;"
-            oninput="testPhoneNum(this.value)">
-        </div>
-        <div id="testPhoneResult" style="margin-top:10px;font-family:var(--mono);font-size:11px;display:none;line-height:2;"></div>
-      </div>
     </div>
     </div>
 
@@ -1002,26 +992,6 @@ function previewPriority(){
     : `<span style="color:var(--mist);font-style:italic">no email</span>`;
   el.innerHTML = namePart + ' &nbsp;·&nbsp; ' + phonePart + ' &nbsp;·&nbsp; ' + emailPart;
 }
-function testPhoneNum(raw){
-  const el=document.getElementById('testPhoneResult');
-  if(!raw.trim()){el.style.display='none';return;}
-  const result=parsePhone(raw,FIXED_CC);
-  el.style.display='block';
-  if(!result){
-    el.innerHTML=`<span style="color:#c89090">✖ Invalid — not a real number in any country (India must be a 10-digit mobile starting 6/7/8/9; foreign numbers need +CC and must pass worldwide validation)</span>`;
-    return;
-  }
-  const full=`+${result.cc}${result.local}`;
-  const countryTag = result.country ? `&nbsp;·&nbsp;<span style="color:var(--mist)">Country:</span> <span style="color:var(--frost)">${result.country}</span>` : '';
-  el.innerHTML=`
-    <span style="color:var(--mist)">Country Code:</span> <span style="color:var(--lilac)">+${result.cc}</span>
-    &nbsp;·&nbsp;
-    <span style="color:var(--mist)">Local Number:</span> <span style="color:var(--sage)">${result.local}</span>
-    &nbsp;·&nbsp;
-    <span style="color:var(--mist)">Full:</span> <span style="color:var(--gold)">${full}</span>${countryTag}
-  `;
-}
-
 // CC_DB: longer codes first so 1242 is tried before 1, 44 before 4, etc.
 const CC_DB=[
   // 4-digit
@@ -1326,29 +1296,33 @@ function download(){
     dataLines.push(['',...v].join(','));
   });
 
-  // Split into chunks that each stay under MAX_FILE_BYTES
+  // ── BALANCED SPLIT ──
+  // 1) Work out the minimum number of files needed so every file < MAX_FILE_BYTES
+  // 2) Spread rows EVENLY across them (e.g. 4 MB of data → 3 files of ~1.33 MB
+  //    each, NOT 1.9 + 1.9 + 0.2)
   const encoder=new TextEncoder();
   const headerBytes=encoder.encode(header+'\n').length;
+  const lineSizes=dataLines.map(l=>encoder.encode(l+'\n').length);
+  const totalData=lineSizes.reduce((a,b)=>a+b,0);
+  const maxLine=lineSizes.length?Math.max(...lineSizes):0;
+
+  let numFiles=1;
+  // each file = header + its share of data (+ up to one extra line of overshoot)
+  while(headerBytes + Math.ceil(totalData/numFiles) + maxLine > MAX_FILE_BYTES) numFiles++;
+
+  const targetData=Math.ceil(totalData/numFiles); // equal share of data bytes per file
 
   const chunks=[];
   let currentChunk=[];
-  let currentSize=headerBytes;
-
-  for(const line of dataLines){
-    const lineBytes=encoder.encode(line+'\n').length;
-    // If adding this line would exceed the limit AND we already have rows, start a new chunk
-    if(currentSize+lineBytes>MAX_FILE_BYTES && currentChunk.length>0){
+  let currentData=0;
+  for(let i=0;i<dataLines.length;i++){
+    currentChunk.push(dataLines[i]);
+    currentData+=lineSizes[i];
+    // close this chunk once it reaches its equal share (keep the last chunk open)
+    if(currentData>=targetData && chunks.length<numFiles-1){
       chunks.push(currentChunk);
       currentChunk=[];
-      currentSize=headerBytes;
-    }
-    currentChunk.push(line);
-    currentSize+=lineBytes;
-    // Safety: if this single line pushed us over the limit, close the chunk now
-    if(currentSize>MAX_FILE_BYTES){
-      chunks.push(currentChunk);
-      currentChunk=[];
-      currentSize=headerBytes;
+      currentData=0;
     }
   }
   if(currentChunk.length>0) chunks.push(currentChunk);
@@ -1370,9 +1344,10 @@ function download(){
     }, idx * 400); // stagger downloads so the browser handles them cleanly
   });
 
+  const perFileMB=((totalData/total+headerBytes)/1048576).toFixed(2);
   const msg=total===1
     ? `✦ Scroll delivered — ${outRows.length} rows enchanted`
-    : `✦ Scroll too vast — split into ${total} files · ${outRows.length} rows enchanted`;
+    : `✦ Split into ${total} equal files (~${perFileMB} MB each, all under 2 MB) · ${outRows.length} rows enchanted`;
   status('ok', msg);
 }
 
