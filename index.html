@@ -116,7 +116,7 @@ h1{font-family:var(--fell);font-size:48px;font-weight:800;font-weight:400;line-h
 @keyframes glyph-hover{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-6px) rotate(2deg);}}
 .upload-main{font-family:var(--fell);font-size:18px;font-weight:700;color:var(--silver);margin-bottom:4px;}
 .upload-sub{font-size:13px;font-weight:600;color:var(--mist);font-family:var(--mono);letter-spacing:0.3px;}
-.upload-ok{display:none;margin-top:14px;border:1px solid rgba(126,168,154,0.3);border-radius:3px;padding:8px 16px;color:var(--sage);font-family:var(--mono);font-size:13px;font-weight:700;background:rgba(126,168,154,0.06);animation:fade-rise 0.4s ease;}
+.upload-ok{display:none;white-space:pre-line;line-height:1.8;margin-top:14px;border:1px solid rgba(126,168,154,0.3);border-radius:3px;padding:8px 16px;color:var(--sage);font-family:var(--mono);font-size:13px;font-weight:700;background:rgba(126,168,154,0.06);animation:fade-rise 0.4s ease;}
 @keyframes fade-rise{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
 
 /* ── Inputs ── */
@@ -298,11 +298,15 @@ html.hz-paused .dot.working{
         </div>
       </div>
       <div class="upload-zone" id="uploadZone">
-        <input type="file" id="csvFile" accept=".csv" onchange="handleFile(event)">
+        <input type="file" id="csvFile" accept=".csv" multiple onchange="handleFile(event)">
         <span class="upload-icon">📜</span>
-        <div class="upload-main">Place your CSV scroll here</div>
-        <div class="upload-sub">or tap to summon from the ether &nbsp;·&nbsp; .csv only</div>
+        <div class="upload-main">Place your CSV scrolls here</div>
+        <div class="upload-sub">or tap to summon from the ether &nbsp;·&nbsp; .csv only &nbsp;·&nbsp; multiple files allowed</div>
         <div class="upload-ok" id="uploadOk"></div>
+      </div>
+      <div id="badFiles" style="display:none;margin-top:14px;border:1px solid rgba(200,155,155,0.3);border-radius:3px;padding:12px 16px;background:rgba(200,155,155,0.05);font-family:var(--mono);">
+        <div style="font-size:13px;font-weight:800;letter-spacing:1px;color:#c87a7a;text-transform:uppercase;margin-bottom:8px;">✖ Broken files — not included in output</div>
+        <div id="badFilesList" style="font-size:13px;font-weight:600;line-height:1.9;"></div>
       </div>
     </div>
     </div>
@@ -352,7 +356,7 @@ html.hz-paused .dot.working{
         <div class="pill"><span class="pill-key">AllowBroadcast</span><span class="pill-val">True</span></div>
         <div class="pill"><span class="pill-key">AllowSMS</span><span class="pill-val">True</span></div>
         <div class="pill"><span class="pill-key">name= in links</span><span class="pill-val">auto-filled ✦</span></div>
-        <div class="pill"><span class="pill-key">msg</span><span class="pill-val">Al Career Accelerator - Inner Circle Program</span></div>
+        <div class="pill"><span class="pill-key">msg</span><span class="pill-val" id="msgPill">Al Career Accelerator - Inner Circle Program</span></div>
         <div class="pill"><span class="pill-key">Duplicates</span><span class="pill-val">dissolved by ward</span></div>
       </div>
       <div class="cc-toggle-row">
@@ -360,6 +364,15 @@ html.hz-paused .dot.working{
         <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(126,168,154,0.08);border:1px solid rgba(126,168,154,0.3);border-radius:3px;padding:7px 18px;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--sage);">
           +91 &nbsp;<span style="color:var(--mist);font-size:12px;font-weight:600;">fixed for all rows</span>
         </div>
+      </div>
+
+      <!-- Custom msg -->
+      <div style="margin-top:16px;border:1px solid rgba(155,158,200,0.18);border-radius:3px;padding:14px 18px;background:rgba(155,158,200,0.03);">
+        <div style="font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:1px;color:var(--lilac);text-transform:uppercase;margin-bottom:10px;">✎ Custom msg (optional)</div>
+        <input type="text" id="customMsg" placeholder="Al Career Accelerator - Inner Circle Program"
+          style="width:100%;background:var(--surface);border:1px solid rgba(155,158,200,0.25);border-radius:3px;padding:10px 13px;color:var(--silver);font-family:var(--mono);font-size:14px;font-weight:700;outline:none;"
+          oninput="updateMsgPill()">
+        <div style="margin-top:8px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--mist);">Leave blank to use the default msg</div>
       </div>
 
       <!-- Priority first row -->
@@ -968,6 +981,14 @@ const AUTO={
 };
 
 // CC is fixed at 91 for all rows
+function getMsg(){
+  const el=document.getElementById('customMsg');
+  const v=el?el.value.trim():'';
+  return v||AUTO.msg;
+}
+function updateMsgPill(){
+  document.getElementById('msgPill').textContent=getMsg();
+}
 const FIXED_CC = '91';
 function previewPriority(){
   const raw=document.getElementById('priorityPhone').value.trim();
@@ -1097,11 +1118,62 @@ function parsePhone(raw, overrideCC){
 
 let rows=[],outRows=[];
 
-function handleFile(e){
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>parseCSV(ev.target.result,f.name);
-  r.readAsText(f);
+function readText(f){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=ev=>res(ev.target.result);
+    r.onerror=()=>rej(new Error('Could not read '+f.name));
+    r.readAsText(f);
+  });
+}
+function showBadFiles(list){
+  const box=document.getElementById('badFiles');
+  const el=document.getElementById('badFilesList');
+  if(!list.length){box.style.display='none';el.innerHTML='';return;}
+  const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  el.innerHTML=list.map(x=>`<div><span style="color:var(--silver)">${esc(x.name)}</span> <span style="color:var(--mist)">→</span> <span style="color:#c89090">${esc(x.reason)}</span></div>`).join('');
+  box.style.display='block';
+}
+async function handleFile(e){
+  const picked=Array.from(e.target.files||[]);
+  if(!picked.length)return;
+  clearMsg();
+  const bad=[];
+  const files=[];
+  picked.forEach(f=>{
+    if(!/\.csv$/i.test(f.name)) bad.push({name:f.name,reason:'Not a .csv file'});
+    else if(f.size===0) bad.push({name:f.name,reason:'File is empty (0 bytes)'});
+    else files.push(f);
+  });
+  status('working',`Reading ${files.length} file(s)…`);
+  const all=[],lines=[];
+  for(const f of files){
+    try{
+      const text=await readText(f);
+      const got=parseCSV(text);
+      all.push(...got);
+      lines.push(`✦  ${f.name}  ·  ${got.length} records`);
+    }catch(ex){
+      bad.push({name:f.name,reason:ex.message});
+    }
+  }
+  rows=all;
+  showBadFiles(bad);
+  const ok=document.getElementById('uploadOk');
+  const goodCount=picked.length-bad.length;
+  if(!rows.length){
+    ok.style.display='none';
+    document.getElementById('previewBtn').disabled=true;
+    err(bad.length?`None of the ${picked.length} file(s) could be used. See the broken files list in Step I.`:'No data rows found.');
+    return;
+  }
+  if(goodCount>1)lines.push(`Total: ${rows.length} records from ${goodCount} file(s)`);
+  ok.textContent=lines.join('\n');
+  ok.style.display='block';
+  status(bad.length?'err':'ok', bad.length
+    ? `${rows.length} rows inscribed from ${goodCount} file(s) · ${bad.length} broken file(s) skipped (see Step I)`
+    : `${rows.length} rows inscribed — click ✦ Reveal Output to continue`);
+  document.getElementById('previewBtn').disabled=false;
 }
 function csvLine(line){
   const res=[];let cur='',q=false;
@@ -1117,12 +1189,11 @@ function csvLine(line){
 }
 function clean(s){return(s||'').replace(/['"]/g,'').trim();}
 
-function parseCSV(text,fname){
-  clearMsg();
+function parseCSV(text){
   const lines=text.split(/\r?\n/);
   let hi=-1;
   for(let i=0;i<lines.length;i++){if(/first.?name/i.test(lines[i])){hi=i;break;}}
-  if(hi===-1){err('Cannot find "First Name" header. Is this a Zoom Registration Report?');return;}
+  if(hi===-1)throw new Error('Cannot find "First Name" header. Is this a Zoom Registration Report?');
   const hdrs=csvLine(lines[hi]).map(h=>clean(h).toLowerCase());
   const I={
     fn:   hdrs.findIndex(h=>/^first.?name$/.test(h)),
@@ -1130,8 +1201,8 @@ function parseCSV(text,fname){
     email:hdrs.findIndex(h=>h.includes('email')),
     phone:hdrs.findIndex(h=>h.includes('phone')),
   };
-  if(I.fn===-1||I.email===-1||I.phone===-1){err(`Missing columns. Found: ${hdrs.join(', ')}`);return;}
-  rows=[];
+  if(I.fn===-1||I.email===-1||I.phone===-1)throw new Error(`Missing columns. Found: ${hdrs.join(', ')}`);
+  const out=[];
   for(let i=hi+1;i<lines.length;i++){
     const l=lines[i].trim();if(!l)continue;
     const c=csvLine(l);
@@ -1139,19 +1210,16 @@ function parseCSV(text,fname){
     const fullName=[fn,ln].filter(Boolean).join(' ');
     const email=clean(c[I.email]),phone=clean(c[I.phone]);
     if(!fn&&!email&&!phone)continue;
-    rows.push({fullName,email,phoneRaw:phone});
+    out.push({fullName,email,phoneRaw:phone});
   }
-  if(!rows.length){err('No data rows found after header.');return;}
-  const ok=document.getElementById('uploadOk');
-  ok.textContent=`✦  ${fname}  ·  ${rows.length} records summoned`;
-  ok.style.display='block';
-  status('ok',`${rows.length} rows inscribed — click ✦ Reveal Output to continue`);
-  document.getElementById('previewBtn').disabled=false;
+  if(!out.length)throw new Error('No data rows found after header.');
+  return out;
 }
 
 function buildOutput(){
   const mainLink=document.getElementById('mainLink').value.trim();
   const altLink=document.getElementById('altLink').value.trim();
+  const MSG=getMsg();
   let noPhone=0,total=0;
   const seen=new Set(),dups=[],skipped=[];
   outRows=[];
@@ -1174,7 +1242,7 @@ function buildOutput(){
         AllowSMS:    AUTO.AllowSMS,
         price:       buildLink(mainLink,priorityEmail,pPhone,pCC,priorityName),
         alter:       buildLink(altLink, priorityEmail,pPhone,pCC,priorityName),
-        msg:         AUTO.msg,
+        msg:         MSG,
         _name:       '★ ' + (priorityName || 'Priority'),
       });
     }
@@ -1194,7 +1262,7 @@ function buildOutput(){
       AllowSMS:    AUTO.AllowSMS,
       price:       buildLink(mainLink,r.email,p.local,p.cc,r.fullName),
       alter:       buildLink(altLink, r.email,p.local,p.cc,r.fullName),
-      msg:         AUTO.msg,
+      msg:         MSG,
       // keep name only for preview display, not in CSV
       _name:       r.fullName,
     });
@@ -1273,7 +1341,7 @@ function run(){
    buffer, since upload targets typically enforce 2,000,000 bytes, not the
    binary 2,097,152 (2*1024*1024). Buffer also covers the last line that
    gets added to a chunk before the size check fires. */
-const MAX_FILE_BYTES = 1900000; // safely under 2,000,000 bytes (2 MB)
+const MAX_FILE_BYTES = 1990000; // each file capped at 1.99 MB (under 2 MB)
 
 function download(){
   if(!rows.length){err('No output rows to download — please upload a CSV first.');return;}
@@ -1296,36 +1364,24 @@ function download(){
     dataLines.push(['',...v].join(','));
   });
 
-  // ── BALANCED SPLIT ──
-  // 1) Work out the minimum number of files needed so every file < MAX_FILE_BYTES
-  // 2) Spread rows EVENLY across them (e.g. 4 MB of data → 3 files of ~1.33 MB
-  //    each, NOT 1.9 + 1.9 + 0.2)
+  // ── FILL SPLIT ──
+  // Pack each file as full as possible, up to 1.99 MB. Only the last file is smaller.
   const encoder=new TextEncoder();
   const headerBytes=encoder.encode(header+'\n').length;
-  const lineSizes=dataLines.map(l=>encoder.encode(l+'\n').length);
-  const totalData=lineSizes.reduce((a,b)=>a+b,0);
-  const maxLine=lineSizes.length?Math.max(...lineSizes):0;
-
-  let numFiles=1;
-  // each file = header + its share of data (+ up to one extra line of overshoot)
-  while(headerBytes + Math.ceil(totalData/numFiles) + maxLine > MAX_FILE_BYTES) numFiles++;
-
-  const targetData=Math.ceil(totalData/numFiles); // equal share of data bytes per file
-
   const chunks=[];
   let currentChunk=[];
-  let currentData=0;
-  for(let i=0;i<dataLines.length;i++){
-    currentChunk.push(dataLines[i]);
-    currentData+=lineSizes[i];
-    // close this chunk once it reaches its equal share (keep the last chunk open)
-    if(currentData>=targetData && chunks.length<numFiles-1){
+  let currentBytes=headerBytes;
+  for(const line of dataLines){
+    const size=encoder.encode(line+'\n').length;
+    if(currentChunk.length && currentBytes+size>MAX_FILE_BYTES){
       chunks.push(currentChunk);
       currentChunk=[];
-      currentData=0;
+      currentBytes=headerBytes;
     }
+    currentChunk.push(line);
+    currentBytes+=size;
   }
-  if(currentChunk.length>0) chunks.push(currentChunk);
+  if(currentChunk.length) chunks.push(currentChunk);
 
   // Trigger download for each chunk with a small delay between them
   const total=chunks.length;
@@ -1344,10 +1400,9 @@ function download(){
     }, idx * 400); // stagger downloads so the browser handles them cleanly
   });
 
-  const perFileMB=((totalData/total+headerBytes)/1048576).toFixed(2);
   const msg=total===1
     ? `✦ Scroll delivered — ${outRows.length} rows enchanted`
-    : `✦ Split into ${total} equal files (~${perFileMB} MB each, all under 2 MB) · ${outRows.length} rows enchanted`;
+    : `✦ Split into ${total} files (each up to 1.99 MB, last one holds the rest) · ${outRows.length} rows enchanted`;
   status('ok', msg);
 }
 
@@ -1378,8 +1433,8 @@ zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag
 zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
 zone.addEventListener('drop',e=>{
   e.preventDefault();zone.classList.remove('drag-over');
-  const f=e.dataTransfer.files[0];
-  if(f){const dt=new DataTransfer();dt.items.add(f);document.getElementById('csvFile').files=dt.files;handleFile({target:{files:[f]}});}
+  const fs=Array.from(e.dataTransfer.files||[]);
+  if(fs.length){const dt=new DataTransfer();fs.forEach(f=>dt.items.add(f));document.getElementById('csvFile').files=dt.files;handleFile({target:{files:fs}});}
 });
 
 /* ── Meteors on main canvas (merged with existing stars/glints) ── */
