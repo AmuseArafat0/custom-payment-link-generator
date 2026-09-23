@@ -990,6 +990,7 @@ function updateMsgPill(){
   document.getElementById('msgPill').textContent=getMsg();
 }
 const FIXED_CC = '91';
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function previewPriority(){
   const raw=document.getElementById('priorityPhone').value.trim();
   const email=document.getElementById('priorityEmail').value.trim();
@@ -1003,13 +1004,13 @@ function previewPriority(){
     return;
   }
   const namePart = name
-    ? `<span style="color:var(--mist)">Name:</span> <span style="color:var(--gold);font-weight:700">${name}</span>`
+    ? `<span style="color:var(--mist)">Name:</span> <span style="color:var(--gold);font-weight:700">${esc(name)}</span>`
     : `<span style="color:var(--mist);font-style:italic">no name</span>`;
   const phonePart = result
     ? `<span style="color:var(--mist)">CC:</span> <span style="color:var(--gold);font-weight:700">+${result.cc}</span> &nbsp;·&nbsp; <span style="color:var(--mist)">Phone:</span> <span style="color:var(--gold);font-weight:700">${result.local}</span>`
     : `<span style="color:var(--mist);font-style:italic">no phone</span>`;
   const emailPart = email
-    ? `<span style="color:var(--mist)">Email:</span> <span style="color:var(--sage);font-weight:700">${email}</span>`
+    ? `<span style="color:var(--mist)">Email:</span> <span style="color:var(--sage);font-weight:700">${esc(email)}</span>`
     : `<span style="color:var(--mist);font-style:italic">no email</span>`;
   el.innerHTML = namePart + ' &nbsp;·&nbsp; ' + phonePart + ' &nbsp;·&nbsp; ' + emailPart;
 }
@@ -1130,7 +1131,6 @@ function showBadFiles(list){
   const box=document.getElementById('badFiles');
   const el=document.getElementById('badFilesList');
   if(!list.length){box.style.display='none';el.innerHTML='';return;}
-  const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   el.innerHTML=list.map(x=>`<div><span style="color:var(--silver)">${esc(x.name)}</span> <span style="color:var(--mist)">→</span> <span style="color:#c89090">${esc(x.reason)}</span></div>`).join('');
   box.style.display='block';
 }
@@ -1159,6 +1159,7 @@ async function handleFile(e){
   }
   rows=all;
   showBadFiles(bad);
+  if(e.target&&'value' in e.target)e.target.value='';
   const ok=document.getElementById('uploadOk');
   const goodCount=picked.length-bad.length;
   if(!rows.length){
@@ -1290,13 +1291,13 @@ function run(){
     sg.querySelectorAll('.stat-card').forEach(c=>{c.style.animation='none';void c.offsetWidth;c.style.animation='';});
     const w=[];
     if(s.dups.length){
-      const preview=s.dups.slice(0,5).map(d=>d.name+' ('+d.phone+')').join(', ');
+      const preview=s.dups.slice(0,5).map(d=>esc(d.name)+' ('+esc(d.phone)+')').join(', ');
       w.push(`⚠ ${s.dups.length} duplicate phone(s) dissolved: ${preview}${s.dups.length>5?` …+${s.dups.length-5} more`:''} <a href="#" onclick="document.getElementById('dupsWrap').style.display='block';return false;" style="color:var(--lilac);text-decoration:underline;font-family:var(--mono)">View details ↓</a>`);
       const db=document.getElementById('dupsTbody');
       db.innerHTML='';
       s.dups.forEach((d,i)=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td class="t-muted">${i+1}</td><td style="color:var(--silver)">${d.name||'—'}</td><td style="color:var(--gold);font-family:var(--mono)">${d.phone}</td><td style="color:var(--mist);font-family:var(--mono);font-size:9px">${d.email||'—'}</td>`;
+        tr.innerHTML=`<td class="t-muted">${i+1}</td><td style="color:var(--silver)">${esc(d.name)||'—'}</td><td style="color:var(--gold);font-family:var(--mono)">${esc(d.phone)}</td><td style="color:var(--mist);font-family:var(--mono);font-size:9px">${esc(d.email)||'—'}</td>`;
         db.appendChild(tr);
       });
     }
@@ -1306,9 +1307,9 @@ function run(){
       sb.innerHTML='';
       s.skipped.forEach((r,i)=>{
         const tr=document.createElement('tr');
-        const rawDisplay=r.phone||'<em style="color:var(--mist)">empty</em>';
+        const rawDisplay=r.phone?esc(r.phone):'<em style="color:var(--mist)">empty</em>';
         const reason=!r.phone?'Empty / missing':'Too short or unrecognisable format';
-        tr.innerHTML=`<td class="t-muted">${i+1}</td><td style="color:var(--silver)">${r.name||'—'}</td><td style="color:#c87a7a;font-family:var(--mono)">${rawDisplay}</td><td style="color:var(--mist);font-family:var(--mono);font-size:9px">${r.email||'—'}</td><td style="color:var(--gold);font-family:var(--mono);font-size:9px">${reason}</td>`;
+        tr.innerHTML=`<td class="t-muted">${i+1}</td><td style="color:var(--silver)">${esc(r.name)||'—'}</td><td style="color:#c87a7a;font-family:var(--mono)">${rawDisplay}</td><td style="color:var(--mist);font-family:var(--mono);font-size:9px">${esc(r.email)||'—'}</td><td style="color:var(--gold);font-family:var(--mono);font-size:9px">${reason}</td>`;
         sb.appendChild(tr);
       });
     }
@@ -1320,12 +1321,12 @@ function run(){
       tr.innerHTML=`
         <td class="t-muted">${i+1}</td>
         <td><span class="chip chip-y">${r.CountryCode}</span></td>
-        <td class="t-phone">${r.Phone}</td>
+        <td class="t-phone">${esc(r.Phone)}</td>
         <td><span class="chip chip-g">True</span></td>
         <td><span class="chip chip-g">True</span></td>
-        <td><span class="t-link" title="${r.price}">${r.price||'—'}</span></td>
-        <td><span class="t-link" title="${r.alter}">${r.alter||'—'}</span></td>
-        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mist)">${r.msg}</td>
+        <td><span class="t-link" title="${esc(r.price)}">${esc(r.price)||'—'}</span></td>
+        <td><span class="t-link" title="${esc(r.alter)}">${esc(r.alter)||'—'}</span></td>
+        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mist)">${esc(r.msg)}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -1396,7 +1397,7 @@ function download(){
         ? 'Output_PaymentLinks.csv'
         : `Output_PaymentLinks_Part${idx+1}of${total}.csv`;
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(()=>URL.revokeObjectURL(url),5000);
     }, idx * 400); // stagger downloads so the browser handles them cleanly
   });
 
